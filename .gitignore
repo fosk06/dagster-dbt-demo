@@ -1,3 +1,44 @@
-.tmp_dagster_*
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.env
 .venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+*.egg-info/
+dist/
+build/
+
+# DBT
 dbt/jdbt/logs
+dbt/jdbt/target
+dbt/jdbt/dbt_packages/
+dbt/jdbt/.user.yml
+dbt/jdbt/profiles.yml
+
+# Dagster
+.tmp_dagster_*
+dagster_home/
+dagster.yaml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# DuckDB
+*.duckdb
+*.duckdb.wal
