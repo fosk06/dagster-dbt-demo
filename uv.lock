@@ -468,6 +468,33 @@ wheels = [
 ]
 
 [[package]]
+name = "dagster-duckdb"
+version = "0.26.20"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "dagster" },
+    { name = "duckdb" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/33/29/f069f6e19d5b09266108e3e4751b6076bc333692364d59643b69b410bced/dagster_duckdb-0.26.20.tar.gz", hash = "sha256:6a80ee7729924e08cba6ec83459cf75de4bce051bf4b7b77142d6edb0c8e421d", size = 9390 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f9/56/a2b07e69da55465f5cc3310098010fa0e447f0af1cf8a3eda2fcf37dff6c/dagster_duckdb-0.26.20-py3-none-any.whl", hash = "sha256:73ef767a7ae170873a30d8168852dd23781a7825c276c5b7654b5d7a739200a0", size = 10609 },
+]
+
+[[package]]
+name = "dagster-duckdb-pandas"
+version = "0.26.20"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "dagster" },
+    { name = "dagster-duckdb" },
+    { name = "pandas" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a9/d6/d8465cf5e9399506bf590f4f4c9ef5f02ba26801e652b4ab79d071a837b0/dagster_duckdb_pandas-0.26.20.tar.gz", hash = "sha256:42c40942cf73015f35b4acc8328d7557e75a92721e6be4f07674a46d632334fb", size = 8027 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1f/5b/2c395176d30d11fff6a70931e1406307549092f0032ade05dcc6760c806b/dagster_duckdb_pandas-0.26.20-py3-none-any.whl", hash = "sha256:4d4d1aa758f7eadb833b7f1730eaa9cfa33f9177140a8952dfd3490a33250a58", size = 8723 },
+]
+
+[[package]]
 name = "dagster-evidence"
 version = "0.1.6"
 source = { registry = "https://pypi.org/simple" }
@@ -1071,6 +1098,8 @@ source = { editable = "." }
 dependencies = [
     { name = "dagster" },
     { name = "dagster-dbt" },
+    { name = "dagster-duckdb" },
+    { name = "dagster-duckdb-pandas" },
     { name = "dagster-evidence" },
     { name = "dagster-sling" },
     { name = "dbt-duckdb" },
@@ -1090,6 +1119,8 @@ dev = [
 requires-dist = [
     { name = "dagster", specifier = "==1.10.20" },
     { name = "dagster-dbt", specifier = ">=0.26.20" },
+    { name = "dagster-duckdb", specifier = ">=0.26.20" },
+    { name = "dagster-duckdb-pandas", specifier = ">=0.26.20" },
     { name = "dagster-evidence", specifier = ">=0.1.6" },
     { name = "dagster-sling", specifier = ">=0.26.20" },
     { name = "dbt-duckdb", specifier = ">=1.9.3" },
