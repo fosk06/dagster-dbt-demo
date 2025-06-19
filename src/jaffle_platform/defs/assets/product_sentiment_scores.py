@@ -12,7 +12,7 @@ nltk.download('vader_lexicon', quiet=True)
 @dg.asset(
     description="Analyse le sentiment des tweets sur les produits Jaffle",
     compute_kind="python",
-    group_name="sentiment_analysis",
+    group_name="default",
     deps=["raw_tweets", "products"],
     required_resource_keys={"duckdb"}  # On déclare qu'on a besoin de la ressource duckdb
 )
