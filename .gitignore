@@ -23,7 +23,7 @@ dbt/jdbt/target
 dbt/jdbt/dbt_packages/
 dbt/jdbt/.user.yml
 dbt/jdbt/profiles.yml
-
+dbt/target
 # Dagster
 .tmp_dagster_*
 dagster_home/
