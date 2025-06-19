@@ -24,11 +24,7 @@ vars:
 models:
   jdbt:
     +schema: main # Schéma par défaut pour tous les modèles
-    staging:
-      +materialized: view # Les modèles de staging sont matérialisés comme des vues
     marts:
       +materialized: table # Les modèles marts sont matérialisés comme des tables
-
-seeds:
-  jdbt:
-    +schema: raw # Les seeds sont chargés dans le schéma raw
+    stg:
+      +materialized: view # Les modèles staging sont matérialisés comme des vues
