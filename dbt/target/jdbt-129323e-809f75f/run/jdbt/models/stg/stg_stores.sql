@@ -1,0 +1,30 @@
+
+  
+  create view "jaffle_platform"."main"."stg_stores__dbt_tmp" as (
+    with source as (
+
+    select * from "jaffle_platform"."main"."raw_stores"
+
+),
+
+renamed as (
+
+    select
+        ----------  ids
+        id as store_id,
+
+        ----------  strings
+        name as store_name,
+
+        ----------  timestamps
+        opened_at as opened_at,
+
+        ----------  numerics
+        tax_rate
+
+    from source
+
+)
+
+select * from renamed
+  );
