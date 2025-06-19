@@ -2,7 +2,7 @@ config-version: 2
 
 name: "jaffle_platform"
 version: "1.0.0"
-require-dbt-version: ">=1.5.0"
+require-dbt-version: ">=1.9.0"
 
 profile: "local"
 
