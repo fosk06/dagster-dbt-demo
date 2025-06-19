@@ -1,0 +1,31 @@
+version: 2
+
+models:
+  - name: stg_supplies
+    description: Staging table for supplies
+    columns:
+      - name: supply_id
+        description: Supply ID (not unique as there can be multiple entries for the same supply)
+        tests:
+          - not_null
+      - name: supply_name
+        description: Name of the supply
+        tests:
+          - not_null
+      - name: supply_cost
+        description: Cost of the supply in cents
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: product_id
+        description: ID of the product this supply is used for
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_products')
+              field: product_id
+      - name: perishable
+        description: Whether the supply is perishable
+        tests:
+          - not_null

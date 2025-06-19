@@ -1,0 +1,3 @@
+.tmp_dagster_*
+.venv
+dbt/jdbt/logs

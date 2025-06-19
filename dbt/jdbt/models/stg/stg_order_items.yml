@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: stg_order_items
+    description: Staged order item data from our jaffle shop app.
+    columns:
+      - name: order_item_id
+        description: The primary key for order items
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: The foreign key to the orders table
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_orders')
+              field: order_id
+      - name: product_id
+        description: The foreign key to the products table
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_products')
+              field: product_id

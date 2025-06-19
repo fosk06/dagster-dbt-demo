@@ -1,0 +1,7 @@
+packages:
+  - package: dbt-labs/dbt_utils
+    version: 1.3.0 # Utilitaires DBT standards (tests, macros, etc.)
+  - package: godatadriven/dbt_date
+    version: 0.14.1 # Fonctions de manipulation de dates
+  - git: "https://github.com/dbt-labs/dbt-audit-helper.git"
+    revision: main # Outils d'audit pour DBT

@@ -1,0 +1,56 @@
+version: 2
+
+models:
+  - name: orders
+    description: Order details enriched with items, revenue, and profit information
+    columns:
+      - name: order_id
+        description: Primary key for orders
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Foreign key to customers
+        tests:
+          - not_null
+          - relationships:
+              to: ref('customers')
+              field: customer_id
+      - name: store_id
+        description: Foreign key to stores
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_stores')
+              field: store_id
+      - name: order_date
+        description: Date and time when the order was placed
+        tests:
+          - not_null
+      - name: status
+        description: Current status of the order
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["completed"]
+      - name: total_items_count
+        description: Total number of items in the order
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+      - name: total_revenue
+        description: Total revenue from the order in dollars
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: total_cost
+        description: Total cost of supplies for the order in dollars
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: total_profit
+        description: Total profit from the order in dollars
+        tests:
+          - not_null

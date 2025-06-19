@@ -1,0 +1,22 @@
+source: LOCAL
+target: DUCKDB
+
+defaults:
+  mode: full-refresh
+  object: "{stream_table}"
+
+streams:
+  file:///Users/thomastrividic/code/python/jaffle-platform/jaffle-data/raw_customers.csv:
+    object: "main.raw_customers"
+  file:///Users/thomastrividic/code/python/jaffle-platform/jaffle-data/raw_orders.csv:
+    object: "main.raw_orders"
+  file:///Users/thomastrividic/code/python/jaffle-platform/jaffle-data/raw_tweets.csv:
+    object: "main.raw_tweets"
+  file:///Users/thomastrividic/code/python/jaffle-platform/jaffle-data/raw_products.csv:
+    object: "main.raw_products"
+  file:///Users/thomastrividic/code/python/jaffle-platform/jaffle-data/raw_stores.csv:
+    object: "main.raw_stores"
+  file:///Users/thomastrividic/code/python/jaffle-platform/jaffle-data/raw_supplies.csv:
+    object: "main.raw_supplies"
+  file:///Users/thomastrividic/code/python/jaffle-platform/jaffle-data/raw_items.csv:
+    object: "main.raw_items"

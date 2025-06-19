@@ -1,0 +1,54 @@
+version: 2
+
+sources:
+  - name: main
+    description: Source data from our jaffle shop
+    schema: main # Les tables sont dans le schéma main
+    tables:
+      - name: raw_customers
+        description: Raw customer data
+        columns:
+          - name: id
+            description: Primary key of the table
+            tests:
+              - unique
+              - not_null
+      - name: raw_orders
+        description: Raw order data
+        columns:
+          - name: id
+            description: Primary key of the table
+            tests:
+              - unique
+              - not_null
+      - name: raw_items
+        description: Raw order items data
+        columns:
+          - name: id
+            description: Primary key of the table
+            tests:
+              - unique
+              - not_null
+      - name: raw_products
+        description: Raw product data
+        columns:
+          - name: sku
+            description: Primary key of the table (SKU)
+            tests:
+              - unique
+              - not_null
+      - name: raw_stores
+        description: Raw store data
+        columns:
+          - name: id
+            description: Primary key of the table
+            tests:
+              - unique
+              - not_null
+      - name: raw_supplies
+        description: Raw supply data
+        columns:
+          - name: id
+            description: Supply ID (not unique as there can be multiple entries for the same supply)
+            tests:
+              - not_null

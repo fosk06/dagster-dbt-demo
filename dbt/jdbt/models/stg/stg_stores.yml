@@ -1,0 +1,26 @@
+version: 2
+
+models:
+  - name: stg_stores
+    description: Staged store data from our jaffle shop app.
+    columns:
+      - name: store_id
+        description: The primary key for stores
+        tests:
+          - unique
+          - not_null
+      - name: store_name
+        description: The name of the store
+        tests:
+          - not_null
+      - name: opened_at
+        description: The date when the store was opened
+        tests:
+          - not_null
+      - name: tax_rate
+        description: The tax rate applied at this store
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1

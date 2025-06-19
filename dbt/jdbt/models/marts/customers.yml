@@ -1,0 +1,82 @@
+version: 2
+
+models:
+  - name: customers
+    description: Customer details enriched with order history and metrics
+    columns:
+      - name: customer_id
+        description: The primary key for customers
+        tests:
+          - unique
+          - not_null
+      - name: customer_name
+        description: Customer's name
+        tests:
+          - not_null
+      - name: first_order_at
+        description: Timestamp of customer's first order
+      - name: most_recent_order_at
+        description: Timestamp of customer's most recent order
+      - name: number_of_orders
+        description: Total number of orders placed by the customer
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: total_food_items
+        description: Total number of food items ordered by the customer
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: total_drink_items
+        description: Total number of drink items ordered by the customer
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: total_items
+        description: Total number of items ordered by the customer
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: total_food_revenue
+        description: Total revenue from food items
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: total_drink_revenue
+        description: Total revenue from drink items
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: total_revenue
+        description: Total revenue from the customer
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: total_food_cost
+        description: Total cost of food supplies
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: total_drink_cost
+        description: Total cost of drink supplies
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: total_cost
+        description: Total cost of supplies for the customer's orders
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: total_food_profit
+        description: Total profit from food items
+      - name: total_drink_profit
+        description: Total profit from drink items
+      - name: total_profit
+        description: Total profit from the customer
+      - name: avg_order_value
+        description: Average value per order for this customer
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: avg_order_profit
+        description: Average profit per order for this customer

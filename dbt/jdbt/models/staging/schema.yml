@@ -1,0 +1,42 @@
+version: 2
+
+models:
+  - name: stg_orders
+    config:
+      freshness_policy:
+        maximum_lag_seconds: 7200 # 2 heures
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_customers
+    config:
+      freshness_policy:
+        maximum_lag_seconds: 7200 # 2 heures
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_order_items
+    config:
+      freshness_policy:
+        maximum_lag_seconds: 7200 # 2 heures
+    columns:
+      - name: order_item_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_products
+    config:
+      freshness_policy:
+        maximum_lag_seconds: 7200 # 2 heures
+    columns:
+      - name: product_id
+        tests:
+          - unique
+          - not_null

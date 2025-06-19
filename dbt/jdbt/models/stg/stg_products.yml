@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: stg_products
+    description: Staging table for products
+    columns:
+      - name: product_id
+        description: Primary key for products
+        tests:
+          - unique
+          - not_null
+      - name: product_name
+        description: Name of the product
+        tests:
+          - not_null
+      - name: product_type
+        description: Type of product (beverage or jaffle)
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["beverage", "jaffle"]
+      - name: product_price
+        description: Price of the product in cents
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: is_food_item
+        description: Whether this is a food item (jaffle)
+        tests:
+          - not_null
+      - name: is_drink_item
+        description: Whether this is a drink item (beverage)
+        tests:
+          - not_null
