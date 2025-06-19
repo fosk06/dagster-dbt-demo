@@ -3,6 +3,9 @@ version: 2
 models:
   - name: orders
     description: Order details enriched with items, revenue, and profit information
+    config:
+      dagster_freshness_policy:
+        maximum_lag_seconds: 3600 # 1 heure
     columns:
       - name: order_id
         description: Primary key for orders

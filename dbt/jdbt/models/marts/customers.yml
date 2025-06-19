@@ -3,6 +3,9 @@ version: 2
 models:
   - name: customers
     description: Customer details enriched with order history and metrics
+    config:
+      dagster_freshness_policy:
+        maximum_lag_seconds: 3600 # 1 heure
     columns:
       - name: customer_id
         description: The primary key for customers

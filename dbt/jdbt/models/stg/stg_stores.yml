@@ -3,6 +3,9 @@ version: 2
 models:
   - name: stg_stores
     description: Staged store data from our jaffle shop app.
+    config:
+      dagster_freshness_policy:
+        maximum_lag_seconds: 7200 # 2 heures
     columns:
       - name: store_id
         description: The primary key for stores

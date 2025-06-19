@@ -3,6 +3,9 @@ version: 2
 models:
   - name: stg_order_items
     description: Staged order item data from our jaffle shop app.
+    config:
+      dagster_freshness_policy:
+        maximum_lag_seconds: 7200 # 2 heures
     columns:
       - name: order_item_id
         description: The primary key for order items

@@ -3,10 +3,14 @@ version: 2
 models:
   - name: stg_supplies
     description: Staging table for supplies
+    config:
+      dagster_freshness_policy:
+        maximum_lag_seconds: 7200 # 2 heures
     columns:
       - name: supply_id
-        description: Supply ID (not unique as there can be multiple entries for the same supply)
+        description: Primary key for supplies
         tests:
+          - unique
           - not_null
       - name: supply_name
         description: Name of the supply

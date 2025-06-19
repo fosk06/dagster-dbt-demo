@@ -3,6 +3,9 @@ version: 2
 models:
   - name: stg_products
     description: Staging table for products
+    config:
+      dagster_freshness_policy:
+        maximum_lag_seconds: 7200 # 2 heures
     columns:
       - name: product_id
         description: Primary key for products

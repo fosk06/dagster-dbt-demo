@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: stg_orders
+    description: Staging table for orders
+    config:
+      dagster_freshness_policy:
+        maximum_lag_seconds: 7200 # 2 heures
+    columns:
+      - name: order_id
+        description: Primary key for orders
+        tests:
+          - unique
+          - not_null
