@@ -69,3 +69,4 @@ wheels/
 *.egg
 __pycache__
 dbt/target
+src/jaffle_platform/defs/__pycache__/
