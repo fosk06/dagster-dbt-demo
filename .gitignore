@@ -70,3 +70,8 @@ wheels/
 __pycache__
 dbt/target
 src/jaffle_platform/defs/__pycache__/
+
+# Ignorer les packages dbt installés
+/dbt/dbt_packages/
+dbt/dbt_packages/
+dbt_packages/
