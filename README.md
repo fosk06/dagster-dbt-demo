@@ -258,3 +258,15 @@ duckdb jaffle_platform.duckdb -c ".schema main.customers"
 # Activer les en-têtes et utiliser le mode markdown
 duckdb jaffle_platform.duckdb -c ".mode markdown" -c ".headers on" -c "SELECT * FROM main.customers LIMIT 5;"
 ```
+
+## Cheatsheet
+
+### Scaffolding an Asset Check
+
+To create a new asset check for an existing asset, you can use the `dagster scaffold` command. This will generate a boilerplate file for your check.
+
+For example, to create a check for the `product_sentiment_scores` asset:
+
+```bash
+dg scaffold defs dagster.asset_check --format=python --asset-key product_sentiment_scores assets_checks/product_sentiment_scores.py
+```
