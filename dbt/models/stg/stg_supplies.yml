@@ -6,6 +6,9 @@ models:
     config:
       dagster_freshness_policy:
         maximum_lag_seconds: 7200 # 2 heures
+      meta:
+        dagster:
+          group: "staging"
     columns:
       - name: supply_id
         description: Supply ID (not unique as there can be multiple entries for the same supply)

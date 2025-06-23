@@ -6,6 +6,9 @@ models:
     config:
       dagster_freshness_policy:
         maximum_lag_seconds: 7200 # 2 heures
+      meta:
+        dagster:
+          group: "staging"
     columns:
       - name: order_id
         description: Primary key for orders

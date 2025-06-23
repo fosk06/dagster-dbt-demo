@@ -4,6 +4,9 @@ target: DUCKDB
 defaults:
   mode: full-refresh
   object: "{stream_table}"
+  meta:
+    dagster:
+      group: "ingestion"
 
 streams:
   file:///Users/thomastrividic/code/python/jaffle-platform/jaffle-data/raw_customers.csv:

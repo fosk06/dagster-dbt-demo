@@ -1,14 +1,12 @@
 version: 2
 
 models:
-  - name: stg_products
-    description: Staging table for products
+  - name: products
+    description: Product details (copied from stg_products)
     config:
-      dagster_freshness_policy:
-        maximum_lag_seconds: 7200 # 2 heures
       meta:
         dagster:
-          group: "staging"
+          group: "datamarts"
     columns:
       - name: product_id
         description: Primary key for products

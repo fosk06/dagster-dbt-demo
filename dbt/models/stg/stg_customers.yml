@@ -1,0 +1,19 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: Staging table for customers
+    config:
+      meta:
+        dagster:
+          group: "staging"
+    columns:
+      - name: customer_id
+        description: Primary key for customers
+        tests:
+          - unique
+          - not_null
+      - name: customer_name
+        description: Name of the customer
+        tests:
+          - not_null
