@@ -10,7 +10,7 @@ nltk.download('vader_lexicon', quiet=True)
     description="Analyse le sentiment des tweets sur les produits Jaffle (connexion directe DuckDB)",
     compute_kind="python",
     group_name="datamarts",
-    deps=[dg.AssetKey(["target", "main", "raw_tweets"]), dg.AssetKey(["target", "main", "products"])],
+    deps=[dg.AssetKey(["target", "main", "tweets"]), dg.AssetKey(["target", "main", "products"])],
 )
 def product_sentiment_scores(context: dg.AssetExecutionContext) -> pd.DataFrame:
     """

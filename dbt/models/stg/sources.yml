@@ -52,3 +52,31 @@ sources:
             description: Supply ID (not unique as there can be multiple entries for the same supply)
             tests:
               - not_null
+      - name: raw_tweets
+        description: Raw tweets data
+        columns:
+          - name: id
+            description: Primary key of the table
+            tests:
+              - unique
+              - not_null
+      - name: stg_tweets
+        description: Staging model for tweets
+        columns:
+          - name: id
+            description: Primary key of the table
+            tests:
+              - unique
+              - not_null
+          - name: user_id
+            description: User identifier
+            tests:
+              - not_null
+          - name: tweeted_at
+            description: Timestamp of the tweet
+            tests:
+              - not_null
+          - name: content
+            description: Tweet content
+            tests:
+              - not_null

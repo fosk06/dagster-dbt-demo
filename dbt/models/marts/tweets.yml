@@ -1,0 +1,27 @@
+version: 2
+
+models:
+  - name: tweets
+    description: Table mart contenant les tweets (passe-plat depuis stg_tweets)
+    config:
+      meta:
+        dagster:
+          group: "datamarts"
+    columns:
+      - name: id
+        description: Primary key of the table
+        tests:
+          - unique
+          - not_null
+      - name: user_id
+        description: User identifier
+        tests:
+          - not_null
+      - name: tweeted_at
+        description: Timestamp of the tweet
+        tests:
+          - not_null
+      - name: content
+        description: Tweet content
+        tests:
+          - not_null

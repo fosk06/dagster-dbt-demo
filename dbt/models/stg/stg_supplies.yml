@@ -3,6 +3,7 @@ version: 2
 models:
   - name: stg_supplies
     description: Staging table for supplies
+    
     config:
       dagster_freshness_policy:
         maximum_lag_seconds: 7200 # 2 heures
