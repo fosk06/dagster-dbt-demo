@@ -1,179 +1,178 @@
 # Jaffle Platform
 
-Ce projet est une démonstration d'une plateforme de données moderne utilisant :
+## Architecture and Updates
 
-- [Dagster](https://dagster.io/) pour l'orchestration
-- [DuckDB](https://duckdb.org/) pour le stockage et le traitement des données
-- [DBT](https://www.getdbt.com/) pour la transformation des données
+- **Monkey patch of external Sling assets**:
+  - Dynamic generation of `AssetSpec` for files ingested by Sling, using a Python script that reads the YAML config and creates assets with the correct group_name.
+- **Clear separation of the 3 layers**:
+  - `ingestion`: ingestion of CSV files via Sling, exposed as external assets and declared as dbt sources.
+  - `staging`: dbt staging models (`stg_`), one per source, grouped under "staging".
+  - `datamart`: final dbt models (mart), one per business entity, grouped under "datamarts".
+- **No cross-references between layers**:
+  - Each layer only references the previous one (e.g., mart → staging, staging → ingestion), never directly between marts or between assets of different layers.
+- **Addition of Python assets**:
+  - External Sling assets are declared dynamically in Python.
+- **Addition of asset checks for CSV sources**:
+  - Python checks are added on ingestion assets to validate source data quality (uniqueness, not_null, etc.).
+
+---
+
+This project is a demonstration of a modern data platform using:
+
+- [Dagster](https://dagster.io/) for orchestration
+- [DuckDB](https://duckdb.org/) for data storage and processing
+- [DBT](https://www.getdbt.com/) for data transformation
 
 ## Installation
 
-### Prérequis
+### Prerequisites
 
 - Python 3.11+
-- [uv](https://github.com/astral-sh/uv) pour la gestion des dépendances
+- [uv](https://github.com/astral-sh/uv) for dependency management
 
-### Installation des dépendances
+### Installing dependencies
 
 ```bash
-# Installation de uv (si pas déjà fait)
+# Install uv (if not already installed)
 pip install uv
 
-# Synchronisation des dépendances avec uv
+# Sync dependencies with uv
 uv sync
 
-# En cas de problème avec uv, vous pouvez forcer la synchronisation
+# If you have issues with uv, you can force reinstall
 uv pip install -r requirements.txt --force-reinstall
 ```
 
-Si vous rencontrez des problèmes avec `uv sync`, vous pouvez aussi utiliser `pip` :
+If you encounter issues with `uv sync`, you can also use `pip`:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## À propos du projet
+## Project Overview
 
-Le projet simule une chaîne de restaurants "Jaffle Shop" (un jaffle est un sandwich grillé australien). Il trace les commandes, les clients, les produits et les approvisionnements de cette chaîne de restaurants.
+The project simulates a restaurant chain "Jaffle Shop" (a jaffle is an Australian grilled sandwich). It tracks orders, customers, products, and supplies for this chain.
 
-### Structure des données
+### Data Structure
 
-#### Sources (schéma `raw`)
+#### Sources (schema `raw`)
 
-- `raw_customers` : Les clients de la chaîne
+- `raw_customers`: Customers of the chain
+  - `id`: Unique customer identifier
+  - `name`: Customer name
+- `raw_orders`: Orders placed
+  - `id`: Unique order identifier
+  - `customer_id`: ID of the customer who placed the order
+  - `ordered_at`: Order date and time
+  - `store_id`: Restaurant ID
+  - `status`: Order status (completed)
+- `raw_items`: Order items
+  - `id`: Unique item identifier
+  - `order_id`: Order ID
+  - `product_id`: Ordered product ID
+- `raw_products`: Available products
+  - `sku`: Unique product identifier
+  - `name`: Product name
+  - `type`: Product type (jaffle/beverage)
+  - `price`: Sale price
+- `raw_stores`: Restaurants
+  - `id`: Unique restaurant identifier
+  - `name`: Restaurant name
+  - `opened_at`: Opening date
+  - `tax_rate`: Applicable tax rate
+- `raw_supplies`: Supplies
+  - `id`: Unique supply identifier
+  - `name`: Supply name
+  - `product_id`: Related product ID
+  - `supply_cost`: Supply cost
+  - `perishable`: Whether the supply is perishable
 
-  - `id` : Identifiant unique du client
-  - `name` : Nom du client
+#### Transformed Models
 
-- `raw_orders` : Les commandes passées
+##### Staging (views)
 
-  - `id` : Identifiant unique de la commande
-  - `customer_id` : ID du client qui a passé la commande
-  - `ordered_at` : Date et heure de la commande
-  - `store_id` : ID du restaurant
-  - `status` : Statut de la commande (completed)
-
-- `raw_items` : Les items des commandes
-
-  - `id` : Identifiant unique de l'item
-  - `order_id` : ID de la commande
-  - `product_id` : ID du produit commandé
-
-- `raw_products` : Les produits disponibles
-
-  - `sku` : Identifiant unique du produit
-  - `name` : Nom du produit
-  - `type` : Type de produit (jaffle/beverage)
-  - `price` : Prix de vente
-
-- `raw_stores` : Les restaurants
-
-  - `id` : Identifiant unique du restaurant
-  - `name` : Nom du restaurant
-  - `opened_at` : Date d'ouverture
-  - `tax_rate` : Taux de taxe applicable
-
-- `raw_supplies` : Les approvisionnements
-  - `id` : Identifiant unique de l'approvisionnement
-  - `name` : Nom de l'approvisionnement
-  - `product_id` : ID du produit concerné
-  - `supply_cost` : Coût d'approvisionnement
-  - `perishable` : Si l'approvisionnement est périssable
-
-#### Modèles transformés
-
-##### Staging (vues)
-
-- `stg_customers` : Nettoyage des données clients
-- `stg_orders` : Nettoyage des données commandes
-- `stg_order_items` : Nettoyage des données items
-- `stg_products` : Nettoyage des données produits
-- `stg_stores` : Nettoyage des données restaurants
-- `stg_supplies` : Nettoyage des données approvisionnements
+- `stg_customers`: Cleaned customer data
+- `stg_orders`: Cleaned order data
+- `stg_order_items`: Cleaned item data
+- `stg_products`: Cleaned product data
+- `stg_stores`: Cleaned store data
+- `stg_supplies`: Cleaned supply data
 
 ##### Marts (tables)
 
-- `customers` : Vue enrichie des clients
+- `customers`: Enriched customer view
+  - Basic customer info
+  - Order stats (count, avg value)
+  - Product stats (food vs beverage)
+  - Total amounts (revenue, costs)
+- `orders`: Enriched order view
+  - Detailed order info
+  - Totals (items, revenue, costs, profit)
+  - Links to customers and stores
+- `order_items`: Enriched item view
+  - Product details
+  - Sale price and supply cost
+  - Profit per item
+- `products`: Enriched product view
+  - Basic product info
+  - Product type (food/beverage)
+  - Sale price
+- `supplies`: Enriched supply view
+  - Basic supply info
+  - Cost and perishability
+  - Link to product
 
-  - Informations de base du client
-  - Statistiques sur les commandes (nombre, valeur moyenne)
-  - Statistiques sur les produits (nourriture vs boissons)
-  - Montants totaux (revenus, coûts)
+## Technical Architecture
 
-- `orders` : Vue enrichie des commandes
-
-  - Informations détaillées sur chaque commande
-  - Totaux (items, revenus, coûts, profit)
-  - Liens vers les clients et restaurants
-
-- `order_items` : Vue enrichie des items
-
-  - Détails du produit
-  - Prix de vente et coût d'approvisionnement
-  - Profit par item
-
-- `products` : Vue enrichie des produits
-
-  - Informations de base du produit
-  - Type de produit (nourriture/boisson)
-  - Prix de vente
-
-- `supplies` : Vue enrichie des approvisionnements
-  - Informations de base de l'approvisionnement
-  - Coût et périssabilité
-  - Lien vers le produit
-
-## Architecture technique
-
-1. **Ingestion** : Les données sont chargées dans DuckDB via Sling (Dagster)
-2. **Transformation** : DBT est utilisé pour créer les modèles analytiques
-3. **Orchestration** : Dagster orchestre l'ensemble du pipeline avec un schedule quotidien
+1. **Ingestion**: Data is loaded into DuckDB via Sling (Dagster)
+2. **Transformation**: DBT is used to create analytical models
+3. **Orchestration**: Dagster orchestrates the entire pipeline with a daily schedule
 
 ## Tests
 
-Le projet inclut 85 tests DBT :
+The project includes 85 DBT tests:
 
-- Tests d'unicité des clés primaires
-- Tests de non-nullité des champs requis
-- Tests de relations entre les tables
-- Tests de plages de valeurs (montants positifs)
-- Tests de valeurs acceptées (types de produits, statuts de commandes)
+- Primary key uniqueness tests
+- Not-null tests on required fields
+- Relationship tests between tables
+- Value range tests (positive amounts)
+- Accepted values tests (product types, order statuses)
 
 ## Configuration
 
-Le projet utilise les configurations suivantes :
+The project uses the following configurations:
 
-- Les modèles staging sont matérialisés en vues
-- Les modèles marts sont matérialisés en tables
-- Le schéma par défaut est `main`
-- Le fuseau horaire est configuré pour l'Europe/Paris
+- Staging models are materialized as views
+- Mart models are materialized as tables
+- The default schema is `main`
+- The timezone is set to Europe/Paris
 
-## Interrogation des données
+## Querying Data
 
-Pour interroger les données avec DuckDB, vous avez deux options :
+To query data with DuckDB, you have two options:
 
-### 1. Mode interactif
+### 1. Interactive mode
 
 ```bash
-# Depuis le dossier dbt/jdbt
+# From the dbt/jdbt folder
 duckdb jaffle_platform.duckdb
 ```
 
-### 2. Mode ligne de commande (recommandé)
+### 2. Command line mode (recommended)
 
 ```bash
-# Syntaxe générale
-duckdb jaffle_platform.duckdb -c "VOTRE_REQUETE;"
+# General syntax
+duckdb jaffle_platform.duckdb -c "YOUR_QUERY;"
 
-# Exemples :
+# Examples:
 
-# Liste des schémas disponibles
+# List available schemas
 duckdb jaffle_platform.duckdb -c "SHOW SCHEMAS;"
 
-# Liste des tables et vues dans le schéma main
+# List tables and views in the main schema
 duckdb jaffle_platform.duckdb -c "SHOW TABLES IN main;"
 
-# Top 10 des clients par montant total dépensé
+# Top 10 customers by total spent
 duckdb jaffle_platform.duckdb -c "
 SELECT
     customer_name,
@@ -184,7 +183,7 @@ FROM main.customers
 ORDER BY total_revenue DESC
 LIMIT 10;"
 
-# Ventes par type de produit et par mois
+# Sales by product type and month
 duckdb jaffle_platform.duckdb -c "
 SELECT
     date_trunc('month', order_date) as month,
@@ -196,7 +195,7 @@ FROM main.order_items
 GROUP BY 1, 2
 ORDER BY 1, 2;"
 
-# Performance des restaurants
+# Restaurant performance
 duckdb jaffle_platform.duckdb -c "
 SELECT
     s.store_name,
@@ -209,7 +208,7 @@ JOIN main.stg_stores s ON o.store_id = s.store_id
 GROUP BY 1
 ORDER BY total_revenue DESC;"
 
-# Produits les plus rentables
+# Most profitable products
 duckdb jaffle_platform.duckdb -c "
 SELECT
     product_name,
@@ -223,39 +222,39 @@ ORDER BY total_profit DESC
 LIMIT 10;"
 ```
 
-### Export des données
+### Data Export
 
 ```bash
-# Export en CSV
+# Export to CSV
 duckdb jaffle_platform.duckdb -c "COPY (SELECT * FROM main.customers) TO 'customers.csv';"
 
-# Export en Parquet
+# Export to Parquet
 duckdb jaffle_platform.duckdb -c "COPY (SELECT * FROM main.orders) TO 'orders.parquet' (FORMAT PARQUET);"
 
-# Export en JSON
+# Export to JSON
 duckdb jaffle_platform.duckdb -c "COPY (SELECT * FROM main.products) TO 'products.json' (FORMAT JSON);"
 ```
 
-### Astuces DuckDB
+### DuckDB Tips
 
-En mode interactif :
+In interactive mode:
 
-- `.tables` pour lister toutes les tables
-- `.schema TABLE_NAME` pour voir la structure d'une table
-- `.mode markdown` pour un affichage en markdown
-- `.headers on` pour afficher les en-têtes de colonnes
-- `.quit` pour quitter
+- `.tables` to list all tables
+- `.schema TABLE_NAME` to see a table's structure
+- `.mode markdown` for markdown display
+- `.headers on` to show column headers
+- `.quit` to exit
 
-En ligne de commande :
+In command line:
 
 ```bash
-# Lister les tables
+# List tables
 duckdb jaffle_platform.duckdb -c ".tables"
 
-# Voir le schéma d'une table
+# See a table's schema
 duckdb jaffle_platform.duckdb -c ".schema main.customers"
 
-# Activer les en-têtes et utiliser le mode markdown
+# Enable headers and use markdown mode
 duckdb jaffle_platform.duckdb -c ".mode markdown" -c ".headers on" -c "SELECT * FROM main.customers LIMIT 5;"
 ```
 
