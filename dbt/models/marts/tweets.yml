@@ -7,6 +7,11 @@ models:
       meta:
         dagster:
           group: "datamarts"
+          freshness_check:
+            lower_bound_delta_seconds: 60
+            deadline_cron: "*/5 * * * *"
+            severity: "WARN"
+
     columns:
       - name: id
         description: Primary key of the table
