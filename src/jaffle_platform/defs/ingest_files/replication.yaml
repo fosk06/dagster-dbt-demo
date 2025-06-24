@@ -9,17 +9,17 @@ defaults:
       group: "ingestion"
 
 streams:
-  file:///Users/thomastrividic/code/python/jaffle-platform/jaffle-data/raw_customers.csv:
+  file://./jaffle-data/raw_customers.csv:
     object: "main.raw_customers"
-  file:///Users/thomastrividic/code/python/jaffle-platform/jaffle-data/raw_orders.csv:
+  file://./jaffle-data/raw_orders.csv:
     object: "main.raw_orders"
-  file:///Users/thomastrividic/code/python/jaffle-platform/jaffle-data/raw_tweets.csv:
+  file://./jaffle-data/raw_tweets.csv:
     object: "main.raw_tweets"
-  file:///Users/thomastrividic/code/python/jaffle-platform/jaffle-data/raw_products.csv:
+  file://./jaffle-data/raw_products.csv:
     object: "main.raw_products"
-  file:///Users/thomastrividic/code/python/jaffle-platform/jaffle-data/raw_stores.csv:
+  file://./jaffle-data/raw_stores.csv:
     object: "main.raw_stores"
-  file:///Users/thomastrividic/code/python/jaffle-platform/jaffle-data/raw_supplies.csv:
+  file://./jaffle-data/raw_supplies.csv:
     object: "main.raw_supplies"
-  file:///Users/thomastrividic/code/python/jaffle-platform/jaffle-data/raw_items.csv:
+  file://./jaffle-data/raw_items.csv:
     object: "main.raw_items"
