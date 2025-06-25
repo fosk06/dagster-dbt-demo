@@ -269,3 +269,7 @@ For example, to create a check for the `product_sentiment_scores` asset:
 ```bash
 dg scaffold defs dagster.asset_check --format=python --asset-key product_sentiment_scores assets_checks/product_sentiment_scores.py
 ```
+
+## Limitations
+
+- **DuckDB lockfile limitations**: Because this project uses DuckDB as the database engine, its lockfile system can prevent multiple materializations from running in parallel. If you attempt to trigger many asset materializations at the same time, you may encounter database lock errors or serialization issues. This is a known limitation of DuckDB and should be considered when designing high-concurrency workflows.
