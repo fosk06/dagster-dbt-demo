@@ -2,7 +2,6 @@ import dagster as dg
 import yaml
 from pathlib import Path
 from urllib.parse import urlparse
-import re
 
 def build_sling_raw_assets(replication_yaml_path, group_name="ingestion"):
     with open(replication_yaml_path, "r") as f:

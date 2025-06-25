@@ -26,7 +26,6 @@ freshness_sensor = dg.build_sensor_for_freshness_checks(
     freshness_checks=freshness_checks
 )
 
-# print(dbt_assets_fn)
 defs = dg.Definitions(
     asset_checks=freshness_checks,
     sensors=[freshness_sensor],
