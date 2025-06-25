@@ -9,8 +9,6 @@ defaults:
       group: "ingestion"
 
 streams:
-  file://./jaffle-data/raw_customers.csv:
-    object: "main.raw_customers"
   file://./jaffle-data/raw_orders.csv:
     object: "main.raw_orders"
   file://./jaffle-data/raw_tweets.csv:
