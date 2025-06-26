@@ -11,9 +11,8 @@ class DltToDbtTranslator(DagsterDltTranslator):
         default_spec = super().get_asset_spec(data)
         print(f"resource name: {data.resource.name}")
         return default_spec.replace_attributes(
-            key=AssetKey(['target', 'main', f"{data.resource.name}"]),
+            key=AssetKey(['target', 'main', f"{data.resource.name}"]), # the dbt component format the keys like this
         )
-
 
 @dlt_assets(
     dlt_source=customers_source(),
@@ -29,9 +28,14 @@ class DltToDbtTranslator(DagsterDltTranslator):
 def dagster_dlt_ingestions_assets(context: AssetExecutionContext, dlt: DagsterDltResource):
     yield from dlt.run(context=context)
 
+dlt_source_assets = [
+    AssetSpec(key, group_name="ingestion") for key in dagster_dlt_ingestions_assets.dependency_keys
+]
+
 defs = Definitions(
     assets=[
         dagster_dlt_ingestions_assets,
+         *dlt_source_assets,
     ],
     resources={
         "dlt": dlt_resource,
