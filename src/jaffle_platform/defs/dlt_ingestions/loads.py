@@ -1,35 +1,39 @@
-import dlt
-from dagster import AssetExecutionContext, Definitions
-from dagster_dlt import DagsterDltResource, dlt_assets
-
-@dlt.source
-def customers_source():
-    @dlt.resource
-    def raw_customers():
-        import csv
-        with open("jaffle-data/raw_customers.csv", newline="") as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                yield row
-    return raw_customers
-
-customers_pipeline = dlt.pipeline(
-    pipeline_name="customers_pipeline",
-    destination=dlt.destinations.duckdb("/tmp/jaffle_platform.duckdb"),
-    dataset_name="main",
-    progress="log",
-)
-
+from dagster import AssetExecutionContext, Definitions, AssetSpec, AssetKey
+from dagster_dlt import DagsterDltResource, dlt_assets, DagsterDltTranslator
+from dagster_dlt.translator import DltResourceTranslatorData
+from dlt import pipeline
+from dlt_sources.filesystem_pipeline import customers_source
 dlt_resource = DagsterDltResource()
+
+class DltToDbtTranslator(DagsterDltTranslator):
+    def get_asset_spec(self, data: DltResourceTranslatorData) -> AssetSpec:
+        """Overrides asset spec to override asset key to be the same as dbt source asset name"""
+        default_spec = super().get_asset_spec(data)
+        print(f"resource name: {data.resource.name}")
+        return default_spec.replace_attributes(
+            key=AssetKey(['target', 'main', f"{data.resource.name}"]),
+        )
+
 
 @dlt_assets(
     dlt_source=customers_source(),
-    dlt_pipeline=customers_pipeline,
+    dlt_pipeline = pipeline(
+        pipeline_name="raw_customers_pipeline",
+        destination='duckdb',
+        dataset_name="main",
+    ),
+    group_name="ingestion",
+    dagster_dlt_translator=DltToDbtTranslator(),
+
 )
-def customers_dlt_assets(context: AssetExecutionContext, dlt: DagsterDltResource):
+def dagster_dlt_ingestions_assets(context: AssetExecutionContext, dlt: DagsterDltResource):
     yield from dlt.run(context=context)
 
 defs = Definitions(
-    assets=[customers_dlt_assets],
-    resources={"dlt": dlt_resource},
+    assets=[
+        dagster_dlt_ingestions_assets,
+    ],
+    resources={
+        "dlt": dlt_resource,
+    },
 )
