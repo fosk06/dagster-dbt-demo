@@ -2,7 +2,7 @@ from dagster import AssetExecutionContext, Definitions, AssetSpec, AssetKey
 from dagster_dlt import DagsterDltResource, dlt_assets, DagsterDltTranslator
 from dagster_dlt.translator import DltResourceTranslatorData
 from dlt import pipeline
-from dlt_sources.filesystem_pipeline import customers_source
+from dlt_sources.filesystem_pipeline import local_csv_source
 dlt_resource = DagsterDltResource()
 
 class DltToDbtTranslator(DagsterDltTranslator):
@@ -15,7 +15,7 @@ class DltToDbtTranslator(DagsterDltTranslator):
         )
 
 @dlt_assets(
-    dlt_source=customers_source(),
+    dlt_source=local_csv_source(),
     dlt_pipeline = pipeline(
         pipeline_name="raw_customers_pipeline",
         destination='duckdb',

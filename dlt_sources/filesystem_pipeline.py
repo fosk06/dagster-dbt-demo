@@ -13,5 +13,5 @@ def raw_customers():
         yield row
 
 @dlt.source
-def customers_source():
+def local_csv_source():
     return raw_customers
