@@ -1,10 +1,5 @@
 from datetime import timedelta
 import dagster as dg
-from dagster_dbt import dbt_assets
-
-# @dbt_assets(manifest="dbt/target/manifest.json")
-# def dbt_assets_fn(context, dbt):
-#     yield from dbt.cli(["build"], context=context).stream()
 
 # AssetKeys for all datamart assets
 asset_keys = [

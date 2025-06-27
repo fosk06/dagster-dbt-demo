@@ -158,7 +158,6 @@ To query data with DuckDB, you have two options:
 ### 1. Interactive mode
 
 ```bash
-# From the dbt/jdbt folder
 duckdb /tmp/jaffle_platform.duckdb
 ```
 

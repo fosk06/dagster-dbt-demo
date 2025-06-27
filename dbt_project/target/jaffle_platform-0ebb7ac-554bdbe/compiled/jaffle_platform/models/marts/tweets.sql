@@ -1,0 +1,1 @@
+select * from "jaffle_platform"."main"."stg_tweets"

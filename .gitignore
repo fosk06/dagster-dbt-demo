@@ -18,11 +18,11 @@ dist/
 build/
 
 # DBT
-dbt/jdbt/logs
-dbt/jdbt/target
-dbt/jdbt/dbt_packages/
-dbt/jdbt/.user.yml
-dbt/jdbt/profiles.yml
+dbt_project/jdbt/logs
+dbt_project/jdbt/target
+dbt_project/jdbt/dbt_packages/
+dbt_project/jdbt/.user.yml
+dbt_project/jdbt/profiles.yml
 
 # Dagster
 .tmp_dagster_*
