@@ -34,7 +34,6 @@ directory_type = "project"
 
 [tool.dg.project]
 root_module = "jaffle_platform"
-autoload_defs = true
 registry_modules = [
     "jaffle_platform.components.*",
 ]
