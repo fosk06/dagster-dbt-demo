@@ -18,11 +18,11 @@ dist/
 build/
 
 # DBT
-dbt_project/jdbt/logs
-dbt_project/jdbt/target
-dbt_project/jdbt/dbt_packages/
-dbt_project/jdbt/.user.yml
-dbt_project/jdbt/profiles.yml
+dbt_project/logs
+dbt_project/target
+dbt_project/dbt_packages/
+dbt_project/.user.yml
+dbt_project/profiles.yml
 
 # Dagster
 .tmp_dagster_*
@@ -77,3 +77,4 @@ dbt/dbt_packages/
 dbt_packages/
 dbt/logs/dbt.log
 dbt/target 
+dbt_project/target/jaffle_platform-2a853ae-88dcda0/run/jaffle_platform/models/marts/supplies.yml/not_null_supplies_cost.sql

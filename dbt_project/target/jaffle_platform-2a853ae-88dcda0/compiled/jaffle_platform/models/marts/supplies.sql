@@ -1,1 +1,0 @@
-select * from "jaffle_platform"."main"."stg_supplies"
