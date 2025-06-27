@@ -24,4 +24,4 @@ def test_data_contract(model_name: str):
         f"[ERROR] {log.timestamp}: {log.message}"
         for log in run.logs if log.level == "ERROR"
     ]
-    return {"success": False, "errors": errors} 
+    return {"success": False, "errors": errors, "run": run} 

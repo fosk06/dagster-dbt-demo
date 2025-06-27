@@ -86,6 +86,10 @@ The project simulates a restaurant chain "Jaffle Shop" (a jaffle is an Australia
   - `product_id`: Related product ID
   - `supply_cost`: Supply cost
   - `perishable`: Whether the supply is perishable
+- `raw_tweets`: Tweets
+  - `id`: Unique tweet identifier
+  - `text`: Tweet text
+  - `tweeted_at`: Tweet date and time
 
 #### Transformed Models
 
@@ -273,3 +277,30 @@ dg scaffold defs dagster.asset_check --format=python --asset-key product_sentime
 ## Limitations
 
 - **DuckDB lockfile limitations**: Because this project uses DuckDB as the database engine, its lockfile system can prevent multiple materializations from running in parallel. If you attempt to trigger many asset materializations at the same time, you may encounter database lock errors or serialization issues. This is a known limitation of DuckDB and should be considered when designing high-concurrency workflows.
+
+## Data Contract Validation Example: `raw_tweets` Source
+
+This project demonstrates advanced data quality validation using the [Data Contract Specification](https://datacontract.com/) and its open-source tooling.
+
+### Custom Dataset: `raw_tweets`
+
+- The `raw_tweets` dataset is ingested from a parquet file.
+- The parquet file is generated using the `tools/parquet_file_generator.py` script.
+- The parquet file is generated with correct typing (e.g., `tweeted_at` as a timestamp).
+
+Additionally, a dataset named `raw_tweets_invalid` is provided. This dataset is identical in structure to `raw_tweets`, but it ingests a Parquet file (`raw_tweets_invalid.parquet`) that does **not** conform to the data contract (e.g., all columns are stored as strings, including `tweeted_at`).
+
+This invalid dataset is included specifically to demonstrate what happens when data contract validation fails: running the materialization on `raw_tweets_invalid` will produce explicit errors, making it easy to test and showcase contract enforcement and error handling in the platform.
+
+### Data Contract Validation
+
+- A data contract YAML file describes the expected schema and types for the `raw_tweets` model, following the [Data Contract Specification](https://datacontract.com/).
+- The [Data Contract CLI](https://datacontract.com/) is used to validate the Parquet files against the contract.
+- If the data matches the contract (e.g., correct types, required fields), validation passes. If not (e.g., wrong type for `tweeted_at`), validation fails with explicit errors.
+
+### Why this matters
+
+- This approach ensures that data ingested into the platform strictly conforms to agreed-upon contracts, improving reliability and trust in downstream analytics.
+- The project demonstrates both a passing and a failing case, making it easy to test and showcase data contract enforcement in a modern data stack.
+
+See the `tools/parquet_file_generator.py` script and the `src/jaffle_platform/defs/source_assets/data_contracts/raw_tweets.yaml` contract for implementation details.
