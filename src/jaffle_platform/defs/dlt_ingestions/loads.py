@@ -21,20 +21,20 @@ class DltToDbtTranslator(DagsterDltTranslator):
         destination='duckdb',
         dataset_name="main",
     ),
-    group_name="ingestion",
+    group_name="landing",
     dagster_dlt_translator=DltToDbtTranslator(),
 
 )
-def dagster_dlt_ingestions_assets(context: AssetExecutionContext, dlt: DagsterDltResource):
+def dagster_dlt_landings_assets(context: AssetExecutionContext, dlt: DagsterDltResource):
     yield from dlt.run(context=context)
 
 dlt_source_assets = [
-    AssetSpec(key, group_name="ingestion") for key in dagster_dlt_ingestions_assets.dependency_keys
+    AssetSpec(key, group_name="landing") for key in dagster_dlt_landings_assets.dependency_keys
 ]
 
 defs = Definitions(
     assets=[
-        dagster_dlt_ingestions_assets,
+        dagster_dlt_landings_assets,
          *dlt_source_assets,
     ],
     resources={

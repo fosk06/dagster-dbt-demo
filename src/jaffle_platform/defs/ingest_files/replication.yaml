@@ -6,7 +6,7 @@ defaults:
   object: "{stream_table}"
   meta:
     dagster:
-      group: "ingestion"
+      group: "landing"
 
 streams:
   file://./jaffle-data/raw_orders.csv:

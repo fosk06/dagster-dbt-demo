@@ -3,7 +3,7 @@ import yaml
 from pathlib import Path
 from urllib.parse import urlparse
 
-def build_sling_raw_assets(replication_yaml_path, group_name="ingestion"):
+def build_sling_raw_assets(replication_yaml_path, group_name="landing"):
     with open(replication_yaml_path, "r") as f:
         config = yaml.safe_load(f)
 
@@ -25,5 +25,5 @@ def build_sling_raw_assets(replication_yaml_path, group_name="ingestion"):
     return assets
 
 defs = dg.Definitions(
-    assets=build_sling_raw_assets("src/jaffle_platform/defs/ingest_files/replication.yaml", group_name="ingestion")
+    assets=build_sling_raw_assets("src/jaffle_platform/defs/ingest_files/replication.yaml", group_name="landing")
 )

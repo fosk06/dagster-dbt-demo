@@ -16,7 +16,7 @@ def test_data_contract(model_name: str):
         return {"success": True, "errors": []}
     # Récupère les erreurs des checks
     errors = [
-        f"Check {check.name or check.id}: {check.result} - {check.reason or check.details}"
+        f"{check.name or check.id}: {check.result} - {check.reason or check.details}"
         for check in run.checks if check.result in ("failed", "error")
     ]
     # Ajoute les logs d'erreur

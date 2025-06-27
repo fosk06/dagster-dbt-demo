@@ -5,15 +5,15 @@
 - **Monkey patch of external Sling assets**:
   - Dynamic generation of `AssetSpec` for files ingested by Sling, using a Python script that reads the YAML config and creates assets with the correct group_name.
 - **Clear separation of the 3 layers**:
-  - `ingestion`: ingestion of CSV files via Sling, exposed as external assets and declared as dbt sources.
+  - `landing`: landing of CSV files via Sling, exposed as external assets and declared as dbt sources.
   - `staging`: dbt staging models (`stg_`), one per source, grouped under "staging".
   - `datamart`: final dbt models (mart), one per business entity, grouped under "datamarts".
 - **No cross-references between layers**:
-  - Each layer only references the previous one (e.g., mart → staging, staging → ingestion), never directly between marts or between assets of different layers.
+  - Each layer only references the previous one (e.g., mart → staging, staging → landing), never directly between marts or between assets of different layers.
 - **Addition of Python assets**:
   - External Sling assets are declared dynamically in Python.
 - **Addition of asset checks for CSV sources**:
-  - Python checks are added on ingestion assets to validate source data quality (uniqueness, not_null, etc.).
+  - Python checks are added on landing assets to validate source data quality (uniqueness, not_null, etc.).
 
 ---
 
@@ -128,7 +128,7 @@ The project simulates a restaurant chain "Jaffle Shop" (a jaffle is an Australia
 
 ## Technical Architecture
 
-1. **Ingestion**: Data is loaded into DuckDB via Sling (Dagster)
+1. **landing**: Data is loaded into DuckDB via Sling (Dagster)
 2. **Transformation**: DBT is used to create analytical models
 3. **Orchestration**: Dagster orchestrates the entire pipeline with a daily schedule
 
