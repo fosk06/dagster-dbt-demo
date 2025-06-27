@@ -76,4 +76,4 @@ src/jaffle_platform/defs/__pycache__/
 dbt/dbt_packages/
 dbt_packages/
 dbt/logs/dbt.log
-dbt/target
+dbt/target 
