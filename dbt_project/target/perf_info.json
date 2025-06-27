@@ -5,8 +5,8 @@
     "static_analysis_parsed_path_count": 0,
     "is_partial_parse_enabled": true,
     "is_static_analysis_enabled": true,
-    "read_files_elapsed": 0.0228862909716554,
-    "load_all_elapsed": 0.09988087497185916,
+    "read_files_elapsed": 0.024888915999326855,
+    "load_all_elapsed": 0.10605216596741229,
     "projects": [
         {
             "project_name": "jaffle_platform",

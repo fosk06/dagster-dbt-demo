@@ -6,7 +6,6 @@ from jaffle_platform.defs.source_assets.data_contracts import test_data_contract
 @dg.asset(
     description="Ingests the raw_tweets.parquet file into DuckDB (table main.raw_tweets), with data contract validation.",
     compute_kind="python",
-    group_name="landing",
     key=dg.AssetKey(["target", "main", "raw_tweets"]),
 )
 def raw_tweets(context: dg.AssetExecutionContext) -> pd.DataFrame:
@@ -34,7 +33,6 @@ def raw_tweets(context: dg.AssetExecutionContext) -> pd.DataFrame:
 @dg.asset(
     description="Ingests the raw_tweets_invalid.parquet file into DuckDB, with data contract validation. Designed to fail the data contract validation.",
     compute_kind="python",
-    group_name="landing",
     key=dg.AssetKey(["target", "main", "raw_tweets_invalid"]),
 )
 def raw_tweets_invalid(context: dg.AssetExecutionContext) -> pd.DataFrame:

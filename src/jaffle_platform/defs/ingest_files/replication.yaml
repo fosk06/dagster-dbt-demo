@@ -4,9 +4,6 @@ target: DUCKDB
 defaults:
   mode: full-refresh
   object: "{stream_table}"
-  meta:
-    dagster:
-      group: "landing"
 
 streams:
   file://./jaffle-data/raw_orders.csv:

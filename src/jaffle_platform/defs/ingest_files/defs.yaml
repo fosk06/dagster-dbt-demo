@@ -8,3 +8,8 @@ attributes:
         instance: /tmp/jaffle_platform.duckdb
   replications:
     - path: replication.yaml
+post_processing:
+  assets:
+    - target: "*"
+      attributes:
+        group_name: "landing"

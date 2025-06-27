@@ -21,7 +21,6 @@ class DltToDbtTranslator(DagsterDltTranslator):
         destination='duckdb',
         dataset_name="main",
     ),
-    group_name="landing",
     dagster_dlt_translator=DltToDbtTranslator(),
 
 )
@@ -35,7 +34,7 @@ dlt_source_assets = [
 defs = Definitions(
     assets=[
         dagster_dlt_landings_assets,
-         *dlt_source_assets,
+        *dlt_source_assets,
     ],
     resources={
         "dlt": dlt_resource,
