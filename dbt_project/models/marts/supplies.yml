@@ -11,23 +11,27 @@ models:
       - name: supply_id
         description: Primary key for supplies
         tests:
-          - unique
+          - not_null
+      - name: product_id
+        description: Product reference
+        tests:
           - not_null
       - name: supply_name
         description: Name of the supply
         tests:
           - not_null
-      - name: cost
+      - name: supply_cost
         description: Cost of the supply in cents
         tests:
           - not_null
           - dbt_utils.accepted_range:
               min_value: 0
-      - name: is_perishable
+      - name: perishable
         description: Whether the supply is perishable
         tests:
           - not_null
-      - name: sku
-        description: SKU of the supply
-        tests:
-          - not_null
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - supply_id
+            - product_id

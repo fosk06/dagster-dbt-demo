@@ -103,3 +103,18 @@ Runtime Error
 [0m14:31:49.340557 [debug] [MainThread]: Command `dbt debug` failed at 14:31:49.340495 after 0.10 seconds
 [0m14:31:49.340783 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x104e0ad50>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10b667f90>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10b664050>]}
 [0m14:31:49.340993 [debug] [MainThread]: Flushing usage events
+[0m22:48:40.243264 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x12e809690>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x12e80b890>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x12e8b1210>]}
+
+
+============================== 22:48:40.245274 | ddcdbbc8-05ec-4e1f-9832-1cae21525901 ==============================
+[0m22:48:40.245274 [info ] [MainThread]: Running with dbt=1.7.19
+[0m22:48:40.245579 [debug] [MainThread]: running dbt with arguments {'printer_width': '80', 'indirect_selection': 'eager', 'write_json': 'True', 'log_cache_events': 'False', 'partial_parse': 'True', 'cache_selected_only': 'False', 'profiles_dir': '/Users/thomastrividic/code/python/jaffle-platform/dbt_project', 'debug': 'False', 'fail_fast': 'False', 'log_path': '/Users/thomastrividic/code/python/jaffle-platform/dbt_project/logs', 'warn_error': 'None', 'version_check': 'True', 'use_colors': 'False', 'use_experimental_parser': 'False', 'no_print': 'None', 'quiet': 'False', 'log_format': 'default', 'static_parser': 'True', 'invocation_command': 'dbt docs-generate --project-dir=/Users/thomastrividic/code/python/jaffle-platform/dbt_project --target-dir=/Users/thomastrividic/code/python/jaffle-platform/dbt_project/target --dialect=bigquery --version=1.7', 'introspect': 'True', 'target_path': '/Users/thomastrividic/code/python/jaffle-platform/dbt_project/target', 'warn_error_options': 'WarnErrorOptions(include=[], exclude=[])', 'send_anonymous_usage_stats': 'True'}
+[0m22:48:40.247626 [info ] [MainThread]: Error importing adapter: No module named 'dbt.adapters.duckdb'
+[0m22:48:40.247880 [error] [MainThread]: Encountered an error:
+Runtime Error
+  Credentials in profile "local", target "prod" invalid: Runtime Error
+    Could not find adapter type duckdb!
+[0m22:48:40.249025 [debug] [MainThread]: Resource report: {"command_name": "generate", "command_wall_clock_time": 0.041766375, "process_user_time": 1.110444, "process_kernel_time": 0.241322, "process_mem_max_rss": "205783040", "command_success": false, "process_in_blocks": "0", "process_out_blocks": "0"}
+[0m22:48:40.249256 [debug] [MainThread]: Command `cli docs generate` failed at 22:48:40.249202 after 0.04 seconds
+[0m22:48:40.249414 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x12e890a10>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x12dffff10>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x12dfffe10>]}
+[0m22:48:40.249569 [debug] [MainThread]: Flushing usage events
