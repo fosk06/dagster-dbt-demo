@@ -11,8 +11,6 @@ defaults:
 streams:
   file://./jaffle-data/raw_orders.csv:
     object: "main.raw_orders"
-  file://./jaffle-data/raw_tweets.csv:
-    object: "main.raw_tweets"
   file://./jaffle-data/raw_products.csv:
     object: "main.raw_products"
   file://./jaffle-data/raw_stores.csv:

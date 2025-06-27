@@ -155,25 +155,25 @@ To query data with DuckDB, you have two options:
 
 ```bash
 # From the dbt/jdbt folder
-duckdb jaffle_platform.duckdb
+duckdb /tmp/jaffle_platform.duckdb
 ```
 
 ### 2. Command line mode (recommended)
 
 ```bash
 # General syntax
-duckdb jaffle_platform.duckdb -c "YOUR_QUERY;"
+duckdb /tmp/jaffle_platform.duckdb -c "YOUR_QUERY;"
 
 # Examples:
 
 # List available schemas
-duckdb jaffle_platform.duckdb -c "SHOW SCHEMAS;"
+duckdb /tmp/jaffle_platform.duckdb -c "SHOW SCHEMAS;"
 
 # List tables and views in the main schema
-duckdb jaffle_platform.duckdb -c "SHOW TABLES IN main;"
+duckdb /tmp/jaffle_platform.duckdb -c "SHOW TABLES IN main;"
 
 # Top 10 customers by total spent
-duckdb jaffle_platform.duckdb -c "
+duckdb /tmp/jaffle_platform.duckdb -c "
 SELECT
     customer_name,
     total_revenue,
@@ -184,7 +184,7 @@ ORDER BY total_revenue DESC
 LIMIT 10;"
 
 # Sales by product type and month
-duckdb jaffle_platform.duckdb -c "
+duckdb /tmp/jaffle_platform.duckdb -c "
 SELECT
     date_trunc('month', order_date) as month,
     product_type,
@@ -196,7 +196,7 @@ GROUP BY 1, 2
 ORDER BY 1, 2;"
 
 # Restaurant performance
-duckdb jaffle_platform.duckdb -c "
+duckdb /tmp/jaffle_platform.duckdb -c "
 SELECT
     s.store_name,
     count(DISTINCT o.order_id) as number_of_orders,
@@ -209,7 +209,7 @@ GROUP BY 1
 ORDER BY total_revenue DESC;"
 
 # Most profitable products
-duckdb jaffle_platform.duckdb -c "
+duckdb /tmp/jaffle_platform.duckdb -c "
 SELECT
     product_name,
     product_type,
@@ -226,13 +226,13 @@ LIMIT 10;"
 
 ```bash
 # Export to CSV
-duckdb jaffle_platform.duckdb -c "COPY (SELECT * FROM main.customers) TO 'customers.csv';"
+duckdb /tmp/jaffle_platform.duckdb -c "COPY (SELECT * FROM main.customers) TO 'customers.csv';"
 
 # Export to Parquet
-duckdb jaffle_platform.duckdb -c "COPY (SELECT * FROM main.orders) TO 'orders.parquet' (FORMAT PARQUET);"
+duckdb /tmp/jaffle_platform.duckdb -c "COPY (SELECT * FROM main.orders) TO 'orders.parquet' (FORMAT PARQUET);"
 
 # Export to JSON
-duckdb jaffle_platform.duckdb -c "COPY (SELECT * FROM main.products) TO 'products.json' (FORMAT JSON);"
+duckdb /tmp/jaffle_platform.duckdb -c "COPY (SELECT * FROM main.products) TO 'products.json' (FORMAT JSON);"
 ```
 
 ### DuckDB Tips
@@ -249,13 +249,13 @@ In command line:
 
 ```bash
 # List tables
-duckdb jaffle_platform.duckdb -c ".tables"
+duckdb /tmp/jaffle_platform.duckdb -c ".tables"
 
 # See a table's schema
-duckdb jaffle_platform.duckdb -c ".schema main.customers"
+duckdb /tmp/jaffle_platform.duckdb -c ".schema main.customers"
 
 # Enable headers and use markdown mode
-duckdb jaffle_platform.duckdb -c ".mode markdown" -c ".headers on" -c "SELECT * FROM main.customers LIMIT 5;"
+duckdb /tmp/jaffle_platform.duckdb -c ".mode markdown" -c ".headers on" -c "SELECT * FROM main.customers LIMIT 5;"
 ```
 
 ## Cheatsheet
