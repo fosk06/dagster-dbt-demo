@@ -15,8 +15,8 @@ info:
 servers:
   local:
     type: local
-    path: jaffle-data/raw_tweets.csv
-    format: csv
+    path: jaffle-data/raw_tweets.parquet
+    format: parquet
 
 ### terms
 
@@ -39,7 +39,7 @@ models:
         type: string
         description: User identifier
       tweeted_at:
-        type: string # ISO datetime string
+        type: timestamp_ntz # duckdb create a timestamp_ntz column in the parquet file
         description: Timestamp of the tweet
       content:
         type: string

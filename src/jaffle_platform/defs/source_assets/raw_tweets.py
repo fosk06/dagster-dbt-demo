@@ -21,8 +21,8 @@ def raw_tweets(context: dg.AssetExecutionContext) -> pd.DataFrame:
         raise Exception(f"Data contract validation failed: {result['errors']}")
     context.log.info("✅ Data contract raw_tweets validé avec succès ! Ingestion en cours...")
     # Lecture du CSV
-    df = pd.read_csv("jaffle-data/raw_tweets.csv")
-    context.log.info(f"{len(df)} lignes chargées depuis raw_tweets.csv")
+    df = pd.read_parquet("jaffle-data/raw_tweets.parquet")
+    context.log.info(f"{len(df)} lignes chargées depuis raw_tweets.parquet")
     # Connexion à DuckDB et écriture dans la table
     conn = duckdb.connect('/tmp/jaffle_platform.duckdb')
     conn.execute("CREATE SCHEMA IF NOT EXISTS main;")
