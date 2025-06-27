@@ -41,6 +41,9 @@ uv sync
 
 # If you have issues with uv, you can force reinstall
 uv pip install -r requirements.txt --force-reinstall
+
+# Install datacontract-cli, mandatory for data contract validation
+uv pip install 'datacontract-cli[all]'
 ```
 
 If you encounter issues with `uv sync`, you can also use `pip`:
