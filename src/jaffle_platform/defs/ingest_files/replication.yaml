@@ -16,3 +16,5 @@ streams:
     object: "main.raw_supplies"
   file://./jaffle-data/raw_items.csv:
     object: "main.raw_items"
+  file://./jaffle-data/raw_tweets.parquet:
+    object: "main.raw_tweets"

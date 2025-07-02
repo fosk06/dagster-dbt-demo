@@ -14,11 +14,18 @@ def build_sling_raw_assets(replication_yaml_path, group_name="landing"):
             rel_path = parsed.path.lstrip("/")
             p = Path(rel_path)
             parts = list(p.parts)
-            if parts and parts[-1].endswith(".csv"):
-                parts[-1] = parts[-1][:-4]
+            if parts:
+                if parts[-1].endswith(".csv"):
+                    parts[-1] = parts[-1][:-4]
+                    file_type = "csv"
+                elif parts[-1].endswith(".parquet"):
+                    parts[-1] = parts[-1][:-8]
+                    file_type = "parquet"
+                else:
+                    file_type = "unknown"
             joined = "_".join(parts)
             joined = joined.replace("-", "_")
-            key = ["file_", f"_{joined}", "csv"]
+            key = ["file_", f"_{joined}", file_type]
             assets.append(
                 dg.AssetSpec(key=key, group_name=group_name)
             )
