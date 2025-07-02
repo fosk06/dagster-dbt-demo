@@ -28,10 +28,6 @@ class DltToDbtTranslator(DagsterDltTranslator):
 def dagster_dlt_landings_assets(context: AssetExecutionContext, dlt: DagsterDltResource):
     yield from dlt.run(context=context)
 
-print("########################")
-print("asset keys:", [str(key) for key in dagster_dlt_landings_assets.dependency_keys])
-print("########################")
-
 dlt_source_assets = [
     AssetSpec(key, group_name="landing") for key in dagster_dlt_landings_assets.dependency_keys
 ]
