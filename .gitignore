@@ -78,3 +78,6 @@ dbt_packages/
 dbt/logs/dbt.log
 dbt/target 
 dbt_project/target/jaffle_platform-2a853ae-88dcda0/run/jaffle_platform/models/marts/supplies.yml/not_null_supplies_cost.sql
+sqlmesh_project/logs/
+sqlmesh_project/.cache/
+logs/
