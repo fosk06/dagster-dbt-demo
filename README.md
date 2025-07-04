@@ -22,6 +22,44 @@ This project is a demonstration of a modern data platform using:
 - [Dagster](https://dagster.io/) for orchestration
 - [DuckDB](https://duckdb.org/) for data storage and processing
 - [DBT](https://www.getdbt.com/) for data transformation
+- [SQLMesh](https://sqlmesh.com/) for data transformation
+
+## SQLMesh
+
+This project uses [SQLMesh](https://sqlmesh.com/) for data modeling and transformation, as a complement or alternative to DBT. SQLMesh provides strict model validation, advanced environment management, and fast execution on DuckDB.
+
+### Main commands
+
+- **Run all models and materialize data**
+
+```bash
+sqlmesh -p sqlmesh_project run
+```
+
+- **Plan and validate changes (dry-run, linter, etc.)**
+
+```bash
+# start the db
+docker compose up -d
+
+# run the plan
+sqlmesh -p sqlmesh_project plan
+```
+
+- **Other useful commands**
+
+```bash
+sqlmesh -p sqlmesh_project lint      # Lint SQL models
+sqlmesh -p sqlmesh_project migrate   # Apply migrations
+sqlmesh -p sqlmesh_project clean     # Clean up artifacts
+```
+
+### SQLMesh advantages
+
+- Strict schema and column validation (immediate detection of inconsistencies)
+- Environment management (dev, prod, etc.)
+- Fast execution on DuckDB or other engines
+- Compatible with most DBT workflows
 
 ## Installation
 
