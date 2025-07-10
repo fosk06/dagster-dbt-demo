@@ -1292,6 +1292,7 @@ dependencies = [
     { name = "nltk" },
     { name = "pandas" },
     { name = "psycopg2-binary" },
+    { name = "sqlalchemy" },
     { name = "sqlmesh" },
 ]
 
@@ -1317,6 +1318,7 @@ requires-dist = [
     { name = "nltk", specifier = ">=3.8.1" },
     { name = "pandas", specifier = ">=2.2.1" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
+    { name = "sqlalchemy", specifier = ">=2.0.41" },
     { name = "sqlmesh", specifier = ">=0.198.0" },
 ]
 
