@@ -1,8 +1,13 @@
 local:
   outputs:
     prod:
-      type: duckdb
-      path: /tmp/jaffle_platform.duckdb
+      type: postgres
+      host: localhost
+      user: jaffle
+      password: jaffle
+      port: 5432
+      dbname: jaffle_db
+      schema: main
       threads: 1
 
   target: prod

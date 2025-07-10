@@ -9,13 +9,14 @@ dependencies = [
     "dagster-duckdb>=0.26.20",
     "dagster-duckdb-pandas>=0.26.20",
     "dagster-evidence>=0.1.6",
+    "dagster-postgres>=0.27.0",
     "dagster-sling>=0.26.20",
-    "dagster-sqlmesh",
-    "dbt-duckdb>=1.9.3",
+    "dbt-postgres>=1.9.0",
     "duckdb>=1.3.1",
     "jafgen>=0.4.14",
     "nltk>=3.8.1",
     "pandas>=2.2.1",
+    "psycopg2-binary>=2.9.10",
     "sqlmesh>=0.198.0",
 ]
 

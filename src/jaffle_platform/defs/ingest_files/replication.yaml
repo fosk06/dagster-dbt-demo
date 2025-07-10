@@ -1,8 +1,8 @@
 source: LOCAL
-target: DUCKDB
+target: POSTGRES
 
 defaults:
-  mode: full-refresh
+  mode: truncate
   object: "{stream_table}"
 
 streams:

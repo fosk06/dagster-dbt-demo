@@ -1,13 +1,19 @@
 import dagster as dg
 import pandas as pd
-import duckdb
+import psycopg2
 
-def load_table_from_duckdb(table_name: str) -> pd.DataFrame:
+def load_table_from_postgres(table_name: str) -> pd.DataFrame:
     """
-    Utility function to load a table from DuckDB as a DataFrame.
+    Utility function to load a table from PostgreSQL as a DataFrame.
     """
-    conn = duckdb.connect('/tmp/jaffle_platform.duckdb')
-    df = conn.execute(f"SELECT * FROM {table_name}").df()
+    conn = psycopg2.connect(
+        host="localhost",
+        port=5432,
+        dbname="jaffle_db",
+        user="jaffle",
+        password="jaffle"
+    )
+    df = pd.read_sql(f'SELECT * FROM {table_name}', conn)
     conn.close()
     return df
 
@@ -15,108 +21,72 @@ def load_table_from_duckdb(table_name: str) -> pd.DataFrame:
 def raw_items_checks(
     context: dg.AssetCheckExecutionContext,
 ) -> dg.AssetCheckResult:
-    raw_items = load_table_from_duckdb('main.raw_items')
+    raw_items = load_table_from_postgres('main.raw_items')
     results = {}
-
     # Column mapping: item_id -> id, product_id -> sku, order_id -> order_id
     # There is no quantity column in the current table
     required_columns = ['id', 'sku', 'order_id']
     results['required_columns_present'] = all(col in raw_items.columns for col in required_columns)
-
-    # 1. Table is not empty
     results['row_count'] = len(raw_items) > 0
-
-    # 2. No nulls in id (item_id)
     results['no_null_id'] = (
         raw_items['id'].notnull().all() if 'id' in raw_items.columns else False
     )
-
-    # 3. id is unique
     results['unique_id'] = (
         raw_items['id'].is_unique if 'id' in raw_items.columns else False
     )
-
-    # 4. No nulls in sku (product_id)
     results['no_null_sku'] = (
         raw_items['sku'].notnull().all() if 'sku' in raw_items.columns else False
     )
-
-    # 5. No nulls in order_id
     results['no_null_order_id'] = (
         raw_items['order_id'].notnull().all() if 'order_id' in raw_items.columns else False
     )
-
-    # Global result
     passed = all(results.values())
-
-    # Logging
     if not passed:
         for check, ok in results.items():
             if not ok:
                 context.log.error(f"Check failed: {check}")
     else:
         context.log.info("All raw_items checks passed")
-
     serializable_results = {k: bool(v) for k, v in results.items()}
-
     return dg.AssetCheckResult(passed=passed, metadata={"raw_items_checks": serializable_results})
 
 @dg.asset_check(asset=dg.AssetKey(['target', 'main', 'raw_orders']), blocking=True)
 def raw_orders_checks(
     context: dg.AssetCheckExecutionContext,
 ) -> dg.AssetCheckResult:
-    raw_orders = load_table_from_duckdb('main.raw_orders')
+    raw_orders = load_table_from_postgres('main.raw_orders')
     results = {}
-
-    # Column mapping: order_id -> id, customer_id -> customer, order_date -> ordered_at
     required_columns = ['id', 'customer', 'ordered_at']
     results['required_columns_present'] = all(col in raw_orders.columns for col in required_columns)
-
-    # 1. Table is not empty
     results['row_count'] = len(raw_orders) > 0
-
-    # 2. No nulls in id (order_id)
     results['no_null_id'] = (
         raw_orders['id'].notnull().all() if 'id' in raw_orders.columns else False
     )
-
-    # 3. id is unique
     results['unique_id'] = (
         raw_orders['id'].is_unique if 'id' in raw_orders.columns else False
     )
-
-    # 4. No nulls in customer (customer_id)
     results['no_null_customer'] = (
         raw_orders['customer'].notnull().all() if 'customer' in raw_orders.columns else False
     )
-
-    # 5. No nulls in ordered_at (order_date)
     results['no_null_ordered_at'] = (
         raw_orders['ordered_at'].notnull().all() if 'ordered_at' in raw_orders.columns else False
     )
-
-    # Global result
     passed = all(results.values())
-
-    # Logging
     if not passed:
         for check, ok in results.items():
             if not ok:
                 context.log.error(f"Check failed: {check}")
     else:
         context.log.info("All raw_orders checks passed")
-
     serializable_results = {k: bool(v) for k, v in results.items()}
-
     return dg.AssetCheckResult(passed=passed, metadata={"raw_orders_checks": serializable_results})
 
 @dg.asset_check(asset=dg.AssetKey(['target', 'main', 'raw_supplies']), blocking=True)
 def raw_supplies_checks(
     context: dg.AssetCheckExecutionContext,
 ) -> dg.AssetCheckResult:
-    raw_supplies = load_table_from_duckdb('main.raw_supplies')
+    raw_supplies = load_table_from_postgres('main.raw_supplies')
     results = {}
-    # Colonnes critiques : id, name, cost, perishable, sku
     required_columns = ['id', 'name', 'cost', 'perishable', 'sku']
     results['required_columns_present'] = all(col in raw_supplies.columns for col in required_columns)
     results['row_count'] = len(raw_supplies) > 0
@@ -138,9 +108,8 @@ def raw_supplies_checks(
 def raw_stores_checks(
     context: dg.AssetCheckExecutionContext,
 ) -> dg.AssetCheckResult:
-    raw_stores = load_table_from_duckdb('main.raw_stores')
+    raw_stores = load_table_from_postgres('main.raw_stores')
     results = {}
-    # Colonnes critiques : id, name, opened_at, tax_rate
     required_columns = ['id', 'name', 'opened_at', 'tax_rate']
     results['required_columns_present'] = all(col in raw_stores.columns for col in required_columns)
     results['row_count'] = len(raw_stores) > 0
@@ -163,9 +132,8 @@ def raw_stores_checks(
 def raw_products_checks(
     context: dg.AssetCheckExecutionContext,
 ) -> dg.AssetCheckResult:
-    raw_products = load_table_from_duckdb('main.raw_products')
+    raw_products = load_table_from_postgres('main.raw_products')
     results = {}
-    # Colonnes critiques : sku, name, type, price
     required_columns = ['sku', 'name', 'type', 'price']
     results['required_columns_present'] = all(col in raw_products.columns for col in required_columns)
     results['row_count'] = len(raw_products) > 0
@@ -188,9 +156,8 @@ def raw_products_checks(
 def raw_customers_checks(
     context: dg.AssetCheckExecutionContext,
 ) -> dg.AssetCheckResult:
-    raw_customers = load_table_from_duckdb('main.raw_customers')
+    raw_customers = load_table_from_postgres('main.raw_customers')
     results = {}
-    # Colonnes critiques : id, name
     required_columns = ['id', 'name']
     results['required_columns_present'] = all(col in raw_customers.columns for col in required_columns)
     results['row_count'] = len(raw_customers) > 0
@@ -211,9 +178,8 @@ def raw_customers_checks(
 def raw_tweets_checks(
     context: dg.AssetCheckExecutionContext,
 ) -> dg.AssetCheckResult:
-    raw_tweets = load_table_from_duckdb('main.raw_tweets')
+    raw_tweets = load_table_from_postgres('main.raw_tweets')
     results = {}
-    # Colonnes critiques : id, user_id, tweeted_at, content
     required_columns = ['id', 'user_id', 'tweeted_at', 'content']
     results['required_columns_present'] = all(col in raw_tweets.columns for col in required_columns)
     results['row_count'] = len(raw_tweets) > 0

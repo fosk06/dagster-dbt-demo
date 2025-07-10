@@ -3,9 +3,13 @@ type: dagster_sling.SlingReplicationCollectionComponent
 attributes:
   sling:
     connections:
-      - name: DUCKDB
-        type: duckdb
-        instance: /tmp/jaffle_platform.duckdb
+      - name: POSTGRES
+        type: postgres
+        host: localhost
+        port: 5432
+        user: jaffle
+        password: jaffle
+        database: jaffle_db
   replications:
     - path: replication.yaml
 post_processing:
