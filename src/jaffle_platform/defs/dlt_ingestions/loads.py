@@ -29,6 +29,7 @@ class DltToDbtTranslator(DagsterDltTranslator):
             key=AssetKey(['target', 'main', f"{data.resource.name}"]),  # the dbt component format the keys like this
         )
 
+
 def truncate_tables(schema, tables):
     conn = psycopg2.connect(
         host="localhost",
@@ -40,8 +41,19 @@ def truncate_tables(schema, tables):
     try:
         with conn.cursor() as cur:
             for table in tables:
-                print(f"Truncating {schema}.{table} ...", flush=True)
-                cur.execute(f'TRUNCATE TABLE "{schema}"."{table}" RESTART IDENTITY CASCADE;')
+                # Check if table exists
+                cur.execute("""
+                    SELECT EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_schema = %s
+                        AND table_name = %s
+                    );
+                """, (schema, table))
+                exists = cur.fetchone()[0]
+                if exists:
+                    print(f"Truncating {schema}.{table} ...", flush=True)
+                    cur.execute(f'TRUNCATE TABLE "{schema}"."{table}" RESTART IDENTITY CASCADE;')
         conn.commit()
         print("All target tables truncated.")
     finally:

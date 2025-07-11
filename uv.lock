@@ -1,12 +1,20 @@
 version = 1
 requires-python = ">=3.11, <3.13"
 resolution-markers = [
-    "python_full_version >= '3.12' and sys_platform != 'win32'",
-    "python_full_version >= '3.12' and platform_machine == 'ARM64' and sys_platform == 'win32'",
-    "python_full_version >= '3.12' and platform_machine != 'ARM64' and sys_platform == 'win32'",
-    "python_full_version < '3.12' and sys_platform != 'win32'",
-    "python_full_version < '3.12' and platform_machine == 'ARM64' and sys_platform == 'win32'",
-    "python_full_version < '3.12' and platform_machine != 'ARM64' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and platform_python_implementation != 'PyPy' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and platform_python_implementation == 'PyPy' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and sys_platform == 'emscripten'",
+    "python_full_version >= '3.12' and platform_machine == 'ARM64' and platform_python_implementation != 'PyPy' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and platform_machine == 'ARM64' and platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and platform_machine != 'ARM64' and platform_python_implementation != 'PyPy' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and platform_machine != 'ARM64' and platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
+    "python_full_version < '3.12' and platform_python_implementation != 'PyPy' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version < '3.12' and platform_python_implementation == 'PyPy' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version < '3.12' and sys_platform == 'emscripten'",
+    "python_full_version < '3.12' and platform_machine == 'ARM64' and platform_python_implementation != 'PyPy' and sys_platform == 'win32'",
+    "python_full_version < '3.12' and platform_machine == 'ARM64' and platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
+    "python_full_version < '3.12' and platform_machine != 'ARM64' and platform_python_implementation != 'PyPy' and sys_platform == 'win32'",
+    "python_full_version < '3.12' and platform_machine != 'ARM64' and platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
 ]
 
 [[package]]
@@ -132,7 +140,7 @@ name = "cffi"
 version = "1.17.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pycparser" },
+    { name = "pycparser", marker = "platform_python_implementation != 'PyPy' or sys_platform == 'emscripten'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/fc/97/c783634659c2920c3fc70419e3af40972dbaf758daa229a7d6ea6135c90d/cffi-1.17.1.tar.gz", hash = "sha256:1c39c6016c32bc48dd54561950ebd6836e1670f2ae46128f67cf49e789c52824", size = 516621 }
 wheels = [
@@ -318,7 +326,7 @@ wheels = [
 
 [[package]]
 name = "dagster"
-version = "1.11.0"
+version = "1.11.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alembic" },
@@ -351,14 +359,14 @@ dependencies = [
     { name = "universal-pathlib" },
     { name = "watchdog" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/48/37/cd8124c3f49a57fc56aecd9fb871fce12161a5ddcf022161864843fe03f7/dagster-1.11.0.tar.gz", hash = "sha256:1e9897eed50bff8d44c756d22b9cbd08fc97a1bc407b07b8297721bbc04b1b01", size = 1497869 }
+sdist = { url = "https://files.pythonhosted.org/packages/1d/cb/d57a6fdfa9020608e917c5e1cd2017db6dda2bc6b9244c8605dddd73f16c/dagster-1.11.2.tar.gz", hash = "sha256:aa23f52ce83abc6fa744bb62adb2f50659a3d3a0a9d7527232be29e477ec92ae", size = 1507432 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8c/56/484ab79b0c7cab26dbcd188b807785c482b288d32b59f72d27c85bd2b739/dagster-1.11.0-py3-none-any.whl", hash = "sha256:5893cf192235905aace515b91852bb19b40545866980459234b223198c752e05", size = 1839476 },
+    { url = "https://files.pythonhosted.org/packages/de/e6/36a91e5f6df4237547b0a146dcb668ec4a7af5eada9f2c1a21160afa7e05/dagster-1.11.2-py3-none-any.whl", hash = "sha256:08ccd053e3dc44743b0b52abf24ace862b0333c6446a0685fccf9578a7d84560", size = 1870855 },
 ]
 
 [[package]]
 name = "dagster-cloud-cli"
-version = "1.11.0"
+version = "1.11.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -372,14 +380,14 @@ dependencies = [
     { name = "setuptools" },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8d/26/97203a931330ab2eec66374205bb999727428f75ee1b8f0ba2a7ce95dc9d/dagster_cloud_cli-1.11.0.tar.gz", hash = "sha256:ce45b746b7626a0c46c0f55b66fe6a35be435c547a3f4d2cdf6c3388116f4ae4", size = 87527 }
+sdist = { url = "https://files.pythonhosted.org/packages/f1/d7/e139539723339e5f4f4e40422e7e868056351de9ba7bbd79b70847ea2556/dagster_cloud_cli-1.11.2.tar.gz", hash = "sha256:ad5a55ca7d65dc7e2b1782f8229ed593e670d6d92d098ece90e865ae41f47567", size = 87939 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8f/92/4e6bdd7ef28c4fe6e8c82d9249056e88b714e21f36410336be6378895790/dagster_cloud_cli-1.11.0-py3-none-any.whl", hash = "sha256:8f832fc511d3e1bdafdc51724b0c3a2ad2e8d1b9e3c4bc79640436d045573108", size = 107840 },
+    { url = "https://files.pythonhosted.org/packages/81/99/493ef5c6e1668d4f6d0b746768d5fbb7f7cac9623fa8d2fa5e8b9d2cbb91/dagster_cloud_cli-1.11.2-py3-none-any.whl", hash = "sha256:2b740555de1eca985e55da46bbb035e45f7bb85efddb935000f1538087660155", size = 108343 },
 ]
 
 [[package]]
 name = "dagster-dbt"
-version = "0.27.0"
+version = "0.27.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dagster" },
@@ -394,31 +402,27 @@ dependencies = [
     { name = "sqlglot", extra = ["rs"] },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/99/b1/d1c40f75e3d1a041d92450505d844d9289d92155bf743662f5c0e1057ef1/dagster_dbt-0.27.0.tar.gz", hash = "sha256:cafb5253a3b0b25a12005f664422ca8f7859b249167ba50d46be6e51c41bc443", size = 89411 }
+sdist = { url = "https://files.pythonhosted.org/packages/59/51/af716a19a6322eb859b3b5fdfb76949611849a6d9b30766ab65c5fadca96/dagster_dbt-0.27.2.tar.gz", hash = "sha256:9e08df446494b2f6033155e919aba01eba00bdc9fc51ddba9edfd12047796b7e", size = 89426 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/69/b4/b1cc19c69a6c95380291bb8e9fdc420e56b02da04ac7e2ee6883cd4d9bfa/dagster_dbt-0.27.0-py3-none-any.whl", hash = "sha256:0d0832d8b52ad597521479184bdf05b7632f793f98f195c9b8cd8289f28baa2e", size = 108353 },
+    { url = "https://files.pythonhosted.org/packages/8a/c9/03d21ce92483c15a5e63ba9d8e1d030280fc3afe8402e3e64eab391c15c5/dagster_dbt-0.27.2-py3-none-any.whl", hash = "sha256:0ecc604fef86c6930343536e461f8c027c036dec68201817d99ae1f0e3b5439e", size = 108394 },
 ]
 
 [[package]]
 name = "dagster-dg-cli"
-version = "1.11.0"
+version = "1.11.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "dagster" },
     { name = "dagster-dg-core" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0e/88/fe7fc4d132dfcc40c50db664f4d0c17bd11688b8cc9cff59dcdecf8bea31/dagster_dg_cli-1.11.0.tar.gz", hash = "sha256:617552061b726ce1ff97db09f5eef19d37216479d721c8741ac75913c6987c8b", size = 541045 }
+sdist = { url = "https://files.pythonhosted.org/packages/9f/67/c6aad1124579553a5701b769443f5f60efc0031b3b651335cf2f39a8abd5/dagster_dg_cli-1.11.2.tar.gz", hash = "sha256:9abb4650ab6db48dab8060960ba1c25b84a71576d1798bcff86c34ccb61071dc", size = 542440 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/26/c7/e69f946304c6ecf4938b87dc101b61eda2233c9d08e58a951a039fb0fc65/dagster_dg_cli-1.11.0-py3-none-any.whl", hash = "sha256:7f3e7b26e567a3481b1266ddd7adc079a95f7b312f37a64da2acdbf2b9d53eb4", size = 571758 },
-]
-
-[package.optional-dependencies]
-local = [
-    { name = "dagster" },
+    { url = "https://files.pythonhosted.org/packages/34/5b/445cc2729073e70479637fe565a06d2e8bbfa2f800bf3b48f45a70ca07a7/dagster_dg_cli-1.11.2-py3-none-any.whl", hash = "sha256:028b7baeba47f3a841762bbee61d24b8387f752981ce63eaf4aeced572e9fe70", size = 573548 },
 ]
 
 [[package]]
 name = "dagster-dg-core"
-version = "1.11.0"
+version = "1.11.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -440,67 +444,27 @@ dependencies = [
     { name = "watchdog" },
     { name = "yaspin" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b4/49/07ee053adff2c013c5fce07104066edce9097c8ba611e13b6471ade4817e/dagster_dg_core-1.11.0.tar.gz", hash = "sha256:af5f48d6bab5c3f3dcb29d305d07110a1c38a412960fad92cc32c27d8ad20d42", size = 41008 }
+sdist = { url = "https://files.pythonhosted.org/packages/47/5c/251a1209b0063274e2262fa09373cfc3376d55af071aedac275dd336b6fc/dagster_dg_core-1.11.2.tar.gz", hash = "sha256:0297641606414bd5122490f01b8f16638d9d09651e3c3d85f6a210e648f2bc00", size = 39277 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/90/52/450a5051779f97dc7aa952c8fb25571aa91b145e4e93dcff9c1dd09b6d42/dagster_dg_core-1.11.0-py3-none-any.whl", hash = "sha256:2d4aee5151951aff1319b3a906ac2ded8b9477fdd4abd3a47ddc450ce30c9bcb", size = 47425 },
+    { url = "https://files.pythonhosted.org/packages/29/fa/55c269204c679904de4136b4164168b838495be121cfa144247dec90f9b9/dagster_dg_core-1.11.2-py3-none-any.whl", hash = "sha256:5eae4773f4acfc7a34da9ae2f6d7e1f8b74b44dc891851f36aafef855d1fa05c", size = 45452 },
 ]
 
 [[package]]
 name = "dagster-dlt"
-version = "0.27.0"
+version = "0.27.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dagster" },
-    { name = "dlt", version = "1.12.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "dlt", version = "1.12.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "dlt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/04/01/30f5487295cec2dc22d1af234b7b1ed5524479417bb1182f72a0cb5d6477/dagster_dlt-0.27.0.tar.gz", hash = "sha256:bf5500e1a2c1893be9ca8897ea0e720eab6202c0ec7f9aedd6a4e135ee2cc598", size = 17736 }
+sdist = { url = "https://files.pythonhosted.org/packages/03/18/9d431d422057bd78f4e32f53b1cc3fabdca3acd3f30c3f091dd8b0df89ce/dagster_dlt-0.27.2.tar.gz", hash = "sha256:567bcb8c6855b7c5822a9636d4a9bc00fb90bcff04f652472edfdf6f8f0d7240", size = 17743 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/df/56/714bc10b7d51b6a4067cb8013a5de5077a092c22ae65c62fedf068f9ef3a/dagster_dlt-0.27.0-py3-none-any.whl", hash = "sha256:9528b16f2124de5fb89a0849aa750ee814d09b9ef2172d1a6da7467a111fc101", size = 20254 },
-]
-
-[[package]]
-name = "dagster-duckdb"
-version = "0.27.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "dagster" },
-    { name = "duckdb" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/6e/f8/bca6b5aaee5895f927388e0cd4fa18a2c15f73b017472ce7c97ad61742c5/dagster_duckdb-0.27.0.tar.gz", hash = "sha256:aa142e9165fba9f6e6d5f94dc57a677d20793db61b9d765fb208867144410c8c", size = 9381 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e2/57/15f13c37b3869df748f37789086eb1e33fbfb35c435c3e98079a114e6d08/dagster_duckdb-0.27.0-py3-none-any.whl", hash = "sha256:def47801e833ac761fd14808911c55e1d0ec1b2e1f8d42cc83a0df08903f8a76", size = 10581 },
-]
-
-[[package]]
-name = "dagster-duckdb-pandas"
-version = "0.27.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "dagster" },
-    { name = "dagster-duckdb" },
-    { name = "pandas" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/0a/63/da9dfb28f8db2963a53ce7d603ccfe503d35b21e24594ca70a4b2a061003/dagster_duckdb_pandas-0.27.0.tar.gz", hash = "sha256:f61fc1c199da766888374bceb7d19699c2f6cd0c0655fd18965fe699dbecbb4a", size = 8023 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9e/7f/1a481cca220a9fb4fc5d589d2345b045484e44ec55434764b842386587d3/dagster_duckdb_pandas-0.27.0-py3-none-any.whl", hash = "sha256:8146beef60f40b749b9a77bd16bb0593a93afac5142e3c0fb8eecbfb6072b9b9", size = 8706 },
-]
-
-[[package]]
-name = "dagster-evidence"
-version = "0.1.6"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "dagster" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/c3/22/1b0a9402b109de56dc7c3e052d4d9dc38c03a9513a5c201f83b9d2c90182/dagster_evidence-0.1.6.tar.gz", hash = "sha256:47f358d1118f942f57bcbc54e7339c4d679656037541a04a0ec32da8c65b1203", size = 3081 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b6/69/8b264db330c30305c2d7d83d4174863e97b2986db6f8c1648e630311a235/dagster_evidence-0.1.6-py3-none-any.whl", hash = "sha256:79ee49bea8757b4ad15220d4421efebe7c33aa5d3ba295c83b2aec6bff05c9c0", size = 4334 },
+    { url = "https://files.pythonhosted.org/packages/99/e9/5157dc21635a54d5211fc7718a2b474513079b2cc2c51e8549afb044e0c7/dagster_dlt-0.27.2-py3-none-any.whl", hash = "sha256:0d46e075ba204fc9337a4b36ac107344a85d8b8ec4d31aace10c86d6e9ba563a", size = 20260 },
 ]
 
 [[package]]
 name = "dagster-graphql"
-version = "1.11.0"
+version = "1.11.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dagster" },
@@ -509,36 +473,36 @@ dependencies = [
     { name = "requests" },
     { name = "starlette" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3a/c1/9df003eee766a208fd7d71cf70942b5b090d7f914a8862389f63ce5fb4dc/dagster_graphql-1.11.0.tar.gz", hash = "sha256:ecb665b253fbfa4406f68120401ecbef6fdb2f6fd92ed4b58040410b3d055135", size = 152946 }
+sdist = { url = "https://files.pythonhosted.org/packages/e9/a5/8433180127c5656723aab71a2217b93ce31cbcbd9c17461a7ee4890f25fe/dagster_graphql-1.11.2.tar.gz", hash = "sha256:b758bf0c27d253ed9d5a49134ee07e535cddd6c57bf02c0ffbbcaece84e4bea8", size = 152960 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ce/11/c420cfe26dd4bcb72d4392d38eebab224a97019b90fc2f90e139b39b365b/dagster_graphql-1.11.0-py3-none-any.whl", hash = "sha256:879c1e74a8383b739c3e722a0e35ccde4f389994f66409c23380829186d6e0bd", size = 200122 },
+    { url = "https://files.pythonhosted.org/packages/8a/a4/d706757d3b126e5d78a380d648538547440fc5b3dbac1a5598fd8161fed1/dagster_graphql-1.11.2-py3-none-any.whl", hash = "sha256:97ffa714b543810123f9d034a17fd1b2b6e10b2dabf983a7739b358b0c0d9929", size = 200114 },
 ]
 
 [[package]]
 name = "dagster-pipes"
-version = "1.11.0"
+version = "1.11.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/3b/16/d8e2d6cf548fc4a021fceb05844ecae1f82083add13194feb4af824a794c/dagster_pipes-1.11.0.tar.gz", hash = "sha256:396c3c9f7272f042fec49bdf31fc629ad511123cb69d593b221515f8b80243c4", size = 20605 }
+sdist = { url = "https://files.pythonhosted.org/packages/50/f3/5c28e95aa952f93e22b5c6cc4046d08b3568f980f67814cc22797a91ab3f/dagster_pipes-1.11.2.tar.gz", hash = "sha256:a7705156a85ce596873d4f5af9664675a47bc7554a7a678736fd88903f856410", size = 20671 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ed/7a/cf145c33f3630ef2fbbf75884d25f892aa179eace571671df8191e7049f1/dagster_pipes-1.11.0-py3-none-any.whl", hash = "sha256:9ed035ce18204e818964d4b19b8c96ccec97acdee44565285c5f4eb5e03f9cc1", size = 20346 },
+    { url = "https://files.pythonhosted.org/packages/ef/a2/bf70c18caac77880b135d0ae0a3c6b4cbefdadff678d9d9dc92f805c2751/dagster_pipes-1.11.2-py3-none-any.whl", hash = "sha256:c2e36f743efd5103373991a5e62aad91754a400d6df1433f6b006032fc7bfc23", size = 20406 },
 ]
 
 [[package]]
 name = "dagster-postgres"
-version = "0.27.0"
+version = "0.27.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dagster" },
     { name = "psycopg2-binary" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/21/12/96232722eed4fda751131fa68962e5dec47afa4746bcfc814169716af7af/dagster_postgres-0.27.0.tar.gz", hash = "sha256:4fbe3b4d113acf8bf2c3c28204eaca70fe05f18f81406351108b8e2eb4be3243", size = 16332 }
+sdist = { url = "https://files.pythonhosted.org/packages/be/e0/0b009f94232235239c82cb4286a7817ebdf1679ff45dd2b9239ef441ce2e/dagster_postgres-0.27.2.tar.gz", hash = "sha256:039f46cfd1989086b0deb294268443fc49dd7f80e0768c3323cfd764d70bcca4", size = 16348 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b3/74/4176a89312c9673e5226802482ce135badbb658e2f986ee969475614f619/dagster_postgres-0.27.0-py3-none-any.whl", hash = "sha256:4e9102e01b90ee6306ae247a6283972f0849e63183774bd428cecfce2a004096", size = 22851 },
+    { url = "https://files.pythonhosted.org/packages/90/34/74c1f0b764ab64f404b5df925e07dfa6ed45c5c92658cd887f742bf69843/dagster_postgres-0.27.2-py3-none-any.whl", hash = "sha256:0058cfe87bc2b0b57ce8981d52499634a38a2ec03617f10e73aa9650b8629d89", size = 22862 },
 ]
 
 [[package]]
 name = "dagster-shared"
-version = "1.11.0"
+version = "1.11.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "packaging" },
@@ -547,28 +511,28 @@ dependencies = [
     { name = "tomlkit" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/23/01/7a388db6c28e74cc8826e7e7e25ab5fad7f7c46c9619031d052269073df6/dagster_shared-1.11.0.tar.gz", hash = "sha256:21361438b05c00748b9059bb067948902a492f831b3dc8f37dcd337eb6fa6a4e", size = 73110 }
+sdist = { url = "https://files.pythonhosted.org/packages/34/4e/647e51f94f0c45fed41a536adf27f6bbce05d9002400cbce0c24c0f53001/dagster_shared-1.11.2.tar.gz", hash = "sha256:871013cd3609f986a1b38ac93946bf9020af9e479de8b6b3f1931280ddf5bb95", size = 73711 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8b/93/b0465e302c71d394119074705302f5abeca3d67ac40b9417de60bd76e180/dagster_shared-1.11.0-py3-none-any.whl", hash = "sha256:da0592f71814dff48001a0753db8ea32a8ad1e96eb03c9ef0968cd410a7e1411", size = 85187 },
+    { url = "https://files.pythonhosted.org/packages/4f/80/1569a6645807072ff0bdf1f8a2a369f09c784ae9a3e2a654e5d2ad212303/dagster_shared-1.11.2-py3-none-any.whl", hash = "sha256:5c54a69b35a957ab15b29162a2afa8dedf7ac92cc9d4cddd95c32efc0da6ec55", size = 85835 },
 ]
 
 [[package]]
 name = "dagster-sling"
-version = "0.27.0"
+version = "0.27.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dagster" },
     { name = "sling" },
     { name = "sling-mac-arm64", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/69/55/50c2049ae74989c7828fc1e2ba9963584280244c67ff53657d235cb1f884/dagster_sling-0.27.0.tar.gz", hash = "sha256:6b0fa2b431e6c521dd07dda25c02438cecc4ea37c6d868965877b73123238f9c", size = 22525 }
+sdist = { url = "https://files.pythonhosted.org/packages/d0/3f/e4c28e25820fc981facd152a730ad2ede753b9b2a9b62931977b2d78638e/dagster_sling-0.27.2.tar.gz", hash = "sha256:d218cca299a6a16946c72555b5cf0321c13f716e6371b7780765c77cfffaa796", size = 22566 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3a/d8/6fcc7a3da13daed6efe5d44a836ef1c009ee74747a13ed8dca0a2a9add0b/dagster_sling-0.27.0-py3-none-any.whl", hash = "sha256:815c71890a6fdfb39682226ddf30c3c6a6a85ac522217f5106bd1be063c1b9d9", size = 25575 },
+    { url = "https://files.pythonhosted.org/packages/0b/b4/aa0c5c404351192f6d7b9df066e8df7e45a25b6b6007e27575379557b99b/dagster_sling-0.27.2-py3-none-any.whl", hash = "sha256:9f03e7165f41dbf04ee37c310ea3f66af0a4d2412c0718bb7a5bf701287dd0a7", size = 25618 },
 ]
 
 [[package]]
 name = "dagster-webserver"
-version = "1.11.0"
+version = "1.11.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -577,9 +541,9 @@ dependencies = [
     { name = "starlette" },
     { name = "uvicorn", extra = ["standard"] },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5e/62/82f714ccae53ba761dad69e3f14b0d2cb89e2495eb16338c2d1f310c23a5/dagster_webserver-1.11.0.tar.gz", hash = "sha256:11ff38f000a3d0775f4edec05b6895e6e03c3d2f94c1f384c4682147d8fc1655", size = 12370946 }
+sdist = { url = "https://files.pythonhosted.org/packages/68/5a/7f0727a52901e42ca595d3051941c81edaca66800b97bb8e2eb6fc18e872/dagster_webserver-1.11.2.tar.gz", hash = "sha256:c96be37a5290444447fd64d8077b80af4a2089c64ff2256636cae47f26801523", size = 12356506 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7c/56/e8ab712a2a456dceda6b044cf772c18be1d6e77613819aca3e3db5bf7b17/dagster_webserver-1.11.0-py3-none-any.whl", hash = "sha256:6957ba3297f22ade7782bc991fa9972bd90cdae0671dd9eca43b9397c55305f2", size = 12719305 },
+    { url = "https://files.pythonhosted.org/packages/67/9a/74b0a77b638a3a085bcfc6890273f4764d96d3dfbe2e9d9781d6e911b810/dagster_webserver-1.11.2-py3-none-any.whl", hash = "sha256:81a1fa43997630fefe7b3bfbf470748d72d77605ec20eada06f751a6a4240187", size = 12701012 },
 ]
 
 [[package]]
@@ -764,88 +728,40 @@ wheels = [
 
 [[package]]
 name = "dlt"
-version = "1.12.1"
+version = "1.13.0"
 source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version < '3.12' and sys_platform != 'win32'",
-    "python_full_version < '3.12' and platform_machine == 'ARM64' and sys_platform == 'win32'",
-    "python_full_version < '3.12' and platform_machine != 'ARM64' and sys_platform == 'win32'",
-]
 dependencies = [
-    { name = "click", marker = "python_full_version < '3.12'" },
-    { name = "fsspec", marker = "python_full_version < '3.12'" },
-    { name = "gitpython", marker = "python_full_version < '3.12'" },
-    { name = "giturlparse", marker = "python_full_version < '3.12'" },
-    { name = "hexbytes", marker = "python_full_version < '3.12'" },
-    { name = "humanize", marker = "python_full_version < '3.12'" },
-    { name = "jsonpath-ng", marker = "python_full_version < '3.12'" },
-    { name = "orjson", marker = "python_full_version < '3.12' and platform_python_implementation != 'PyPy'" },
-    { name = "packaging", marker = "python_full_version < '3.12'" },
-    { name = "pathvalidate", marker = "python_full_version < '3.12'" },
-    { name = "pendulum", marker = "python_full_version < '3.12'" },
-    { name = "pluggy", marker = "python_full_version < '3.12'" },
-    { name = "pytz", marker = "python_full_version < '3.12'" },
-    { name = "pywin32", marker = "python_full_version < '3.12' and sys_platform == 'win32'" },
-    { name = "pyyaml", marker = "python_full_version < '3.12'" },
-    { name = "requests", marker = "python_full_version < '3.12'" },
-    { name = "requirements-parser", marker = "python_full_version < '3.12'" },
-    { name = "rich-argparse", marker = "python_full_version < '3.12'" },
-    { name = "semver", marker = "python_full_version < '3.12'" },
-    { name = "setuptools", marker = "python_full_version < '3.12'" },
-    { name = "simplejson", marker = "python_full_version < '3.12'" },
-    { name = "sqlglot", marker = "python_full_version < '3.12'" },
-    { name = "tenacity", marker = "python_full_version < '3.12'" },
-    { name = "tomlkit", marker = "python_full_version < '3.12'" },
-    { name = "typing-extensions", marker = "python_full_version < '3.12'" },
-    { name = "tzdata", marker = "python_full_version < '3.12'" },
-    { name = "win-precise-time", marker = "python_full_version < '3.12' and os_name == 'nt'" },
+    { name = "click" },
+    { name = "fsspec" },
+    { name = "gitpython" },
+    { name = "giturlparse" },
+    { name = "hexbytes" },
+    { name = "humanize" },
+    { name = "jsonpath-ng" },
+    { name = "orjson", marker = "sys_platform != 'emscripten'" },
+    { name = "packaging" },
+    { name = "pathvalidate" },
+    { name = "pendulum" },
+    { name = "pluggy" },
+    { name = "pytz" },
+    { name = "pywin32", marker = "sys_platform == 'win32'" },
+    { name = "pyyaml" },
+    { name = "requests" },
+    { name = "requirements-parser" },
+    { name = "rich-argparse" },
+    { name = "semver" },
+    { name = "setuptools" },
+    { name = "simplejson" },
+    { name = "sqlglot" },
+    { name = "tenacity" },
+    { name = "tomlkit" },
+    { name = "typing-extensions" },
+    { name = "tzdata" },
+    { name = "win-precise-time", marker = "os_name == 'nt'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d2/eb/75910ebc6af37408a4e8350b26e3294a72d475898abd0cfbb974e5e60ef6/dlt-1.12.1.tar.gz", hash = "sha256:4a90aeb58f3e5d89005fe9f36bcc7fa723f87632365883478751cc7f7b1397f6", size = 784658 }
+sdist = { url = "https://files.pythonhosted.org/packages/c8/4b/b0e2a7f2b0c3c0fe75892a50803e284f05c65cd6db834d752986c500facb/dlt-1.13.0.tar.gz", hash = "sha256:485d40e806daa707f2cdd5e2045aa467ca40fd380f046e882826af4bb76d2ba0", size = 770236 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/99/a1/5995636839be54cac45ae9113de686415951d8755f03eba6715e353dbabb/dlt-1.12.1-py3-none-any.whl", hash = "sha256:bc16d157012aa96b77d6c151f624cf2d3b122691e95bc98606021f0bc1d70fb2", size = 976995 },
-]
-
-[[package]]
-name = "dlt"
-version = "1.12.3"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.12' and sys_platform != 'win32'",
-    "python_full_version >= '3.12' and platform_machine == 'ARM64' and sys_platform == 'win32'",
-    "python_full_version >= '3.12' and platform_machine != 'ARM64' and sys_platform == 'win32'",
-]
-dependencies = [
-    { name = "click", marker = "python_full_version >= '3.12'" },
-    { name = "fsspec", marker = "python_full_version >= '3.12'" },
-    { name = "gitpython", marker = "python_full_version >= '3.12'" },
-    { name = "giturlparse", marker = "python_full_version >= '3.12'" },
-    { name = "hexbytes", marker = "python_full_version >= '3.12'" },
-    { name = "humanize", marker = "python_full_version >= '3.12'" },
-    { name = "jsonpath-ng", marker = "python_full_version >= '3.12'" },
-    { name = "orjson", marker = "python_full_version >= '3.12' and platform_python_implementation != 'PyPy'" },
-    { name = "packaging", marker = "python_full_version >= '3.12'" },
-    { name = "pathvalidate", marker = "python_full_version >= '3.12'" },
-    { name = "pendulum", marker = "python_full_version >= '3.12'" },
-    { name = "pluggy", marker = "python_full_version >= '3.12'" },
-    { name = "pytz", marker = "python_full_version >= '3.12'" },
-    { name = "pywin32", marker = "python_full_version >= '3.12' and sys_platform == 'win32'" },
-    { name = "pyyaml", marker = "python_full_version >= '3.12'" },
-    { name = "requests", marker = "python_full_version >= '3.12'" },
-    { name = "requirements-parser", marker = "python_full_version >= '3.12'" },
-    { name = "rich-argparse", marker = "python_full_version >= '3.12'" },
-    { name = "semver", marker = "python_full_version >= '3.12'" },
-    { name = "setuptools", marker = "python_full_version >= '3.12'" },
-    { name = "simplejson", marker = "python_full_version >= '3.12'" },
-    { name = "sqlglot", marker = "python_full_version >= '3.12'" },
-    { name = "tenacity", marker = "python_full_version >= '3.12'" },
-    { name = "tomlkit", marker = "python_full_version >= '3.12'" },
-    { name = "typing-extensions", marker = "python_full_version >= '3.12'" },
-    { name = "tzdata", marker = "python_full_version >= '3.12'" },
-    { name = "win-precise-time", marker = "python_full_version >= '3.12' and os_name == 'nt'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/20/a8/93a05396f1b9027e7c8c87c4722fbe1fa53148e5317063e0115fdcb25067/dlt-1.12.3.tar.gz", hash = "sha256:3f2835668a9686280488db3fcd6b83f3d1a70b1b2acad5fa6de4f76b9f19ce38", size = 761885 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/44/23/407e6a577893ecbd1819d37afbdf3ffbc6a4357fa7d1eaedd0cbaac5ee78/dlt-1.12.3-py3-none-any.whl", hash = "sha256:c135cbb8d2dfb5c94a8130d379aca18c182600e6f7380580a2767b3ef023831d", size = 975297 },
+    { url = "https://files.pythonhosted.org/packages/71/f4/969640b5f866620f6f5851c7a46053393c9580476464c0f8f641185aaaa9/dlt-1.13.0-py3-none-any.whl", hash = "sha256:4c15dfa57c2d983eee2959b47ab07eee0ead5d2556c5721e4cc8d02bbbcee9e8", size = 986044 },
 ]
 
 [[package]]
@@ -1186,9 +1102,13 @@ name = "ipython"
 version = "8.18.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version < '3.12' and sys_platform != 'win32'",
-    "python_full_version < '3.12' and platform_machine == 'ARM64' and sys_platform == 'win32'",
-    "python_full_version < '3.12' and platform_machine != 'ARM64' and sys_platform == 'win32'",
+    "python_full_version < '3.12' and platform_python_implementation != 'PyPy' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version < '3.12' and platform_python_implementation == 'PyPy' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version < '3.12' and sys_platform == 'emscripten'",
+    "python_full_version < '3.12' and platform_machine == 'ARM64' and platform_python_implementation != 'PyPy' and sys_platform == 'win32'",
+    "python_full_version < '3.12' and platform_machine == 'ARM64' and platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
+    "python_full_version < '3.12' and platform_machine != 'ARM64' and platform_python_implementation != 'PyPy' and sys_platform == 'win32'",
+    "python_full_version < '3.12' and platform_machine != 'ARM64' and platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
 ]
 dependencies = [
     { name = "colorama", marker = "python_full_version < '3.12' and sys_platform == 'win32'" },
@@ -1211,9 +1131,13 @@ name = "ipython"
 version = "9.4.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.12' and sys_platform != 'win32'",
-    "python_full_version >= '3.12' and platform_machine == 'ARM64' and sys_platform == 'win32'",
-    "python_full_version >= '3.12' and platform_machine != 'ARM64' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and platform_python_implementation != 'PyPy' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and platform_python_implementation == 'PyPy' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and sys_platform == 'emscripten'",
+    "python_full_version >= '3.12' and platform_machine == 'ARM64' and platform_python_implementation != 'PyPy' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and platform_machine == 'ARM64' and platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and platform_machine != 'ARM64' and platform_python_implementation != 'PyPy' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and platform_machine != 'ARM64' and platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
 ]
 dependencies = [
     { name = "colorama", marker = "python_full_version >= '3.12' and sys_platform == 'win32'" },
@@ -1281,9 +1205,6 @@ dependencies = [
     { name = "dagster" },
     { name = "dagster-dbt" },
     { name = "dagster-dlt" },
-    { name = "dagster-duckdb" },
-    { name = "dagster-duckdb-pandas" },
-    { name = "dagster-evidence" },
     { name = "dagster-postgres" },
     { name = "dagster-sling" },
     { name = "dbt-postgres" },
@@ -1296,27 +1217,36 @@ dependencies = [
     { name = "sqlmesh" },
 ]
 
+[package.optional-dependencies]
+dbt = [
+    { name = "dagster" },
+    { name = "dlt" },
+    { name = "duckdb" },
+    { name = "postgres" },
+]
+
 [package.dev-dependencies]
 dev = [
-    { name = "dagster-dg-cli", extra = ["local"] },
+    { name = "dagster-dg-cli" },
     { name = "dagster-webserver" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "dagster", specifier = "==1.11.0" },
-    { name = "dagster-dbt", specifier = ">=0.26.20" },
-    { name = "dagster-dlt", specifier = ">=0.26.20" },
-    { name = "dagster-duckdb", specifier = ">=0.26.20" },
-    { name = "dagster-duckdb-pandas", specifier = ">=0.26.20" },
-    { name = "dagster-evidence", specifier = ">=0.1.6" },
-    { name = "dagster-postgres", specifier = ">=0.27.0" },
-    { name = "dagster-sling", specifier = ">=0.26.20" },
+    { name = "dagster", specifier = "==1.11.2" },
+    { name = "dagster", marker = "extra == 'dbt'", specifier = ">=1.11.2" },
+    { name = "dagster-dbt", specifier = ">=0.27.2" },
+    { name = "dagster-dlt", specifier = ">=0.27.2" },
+    { name = "dagster-postgres", specifier = ">=0.27.2" },
+    { name = "dagster-sling", specifier = ">=0.27.2" },
     { name = "dbt-postgres", specifier = ">=1.9.0" },
+    { name = "dlt", marker = "extra == 'dbt'", specifier = ">=1.13.0" },
     { name = "duckdb", specifier = ">=1.3.1" },
+    { name = "duckdb", marker = "extra == 'dbt'", specifier = ">=1.3.1" },
     { name = "jafgen", specifier = ">=0.4.14" },
     { name = "nltk", specifier = ">=3.8.1" },
     { name = "pandas", specifier = ">=2.2.1" },
+    { name = "postgres", marker = "extra == 'dbt'", specifier = ">=4.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
     { name = "sqlalchemy", specifier = ">=2.0.41" },
     { name = "sqlmesh", specifier = ">=0.198.0" },
@@ -1656,9 +1586,13 @@ name = "networkx"
 version = "3.2.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version < '3.12' and sys_platform != 'win32'",
-    "python_full_version < '3.12' and platform_machine == 'ARM64' and sys_platform == 'win32'",
-    "python_full_version < '3.12' and platform_machine != 'ARM64' and sys_platform == 'win32'",
+    "python_full_version < '3.12' and platform_python_implementation != 'PyPy' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version < '3.12' and platform_python_implementation == 'PyPy' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version < '3.12' and sys_platform == 'emscripten'",
+    "python_full_version < '3.12' and platform_machine == 'ARM64' and platform_python_implementation != 'PyPy' and sys_platform == 'win32'",
+    "python_full_version < '3.12' and platform_machine == 'ARM64' and platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
+    "python_full_version < '3.12' and platform_machine != 'ARM64' and platform_python_implementation != 'PyPy' and sys_platform == 'win32'",
+    "python_full_version < '3.12' and platform_machine != 'ARM64' and platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c4/80/a84676339aaae2f1cfdf9f418701dd634aef9cc76f708ef55c36ff39c3ca/networkx-3.2.1.tar.gz", hash = "sha256:9f1bb5cf3409bf324e0a722c20bdb4c20ee39bf1c30ce8ae499c8502b0b5e0c6", size = 2073928 }
 wheels = [
@@ -1670,9 +1604,13 @@ name = "networkx"
 version = "3.5"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.12' and sys_platform != 'win32'",
-    "python_full_version >= '3.12' and platform_machine == 'ARM64' and sys_platform == 'win32'",
-    "python_full_version >= '3.12' and platform_machine != 'ARM64' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and platform_python_implementation != 'PyPy' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and platform_python_implementation == 'PyPy' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and sys_platform == 'emscripten'",
+    "python_full_version >= '3.12' and platform_machine == 'ARM64' and platform_python_implementation != 'PyPy' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and platform_machine == 'ARM64' and platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and platform_machine != 'ARM64' and platform_python_implementation != 'PyPy' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and platform_machine != 'ARM64' and platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/6c/4f/ccdb8ad3a38e583f214547fd2f7ff1fc160c43a75af88e6aec213404b96a/networkx-3.5.tar.gz", hash = "sha256:d4c6f9cf81f52d69230866796b82afbccdec3db7ae4fbd1b65ea750feed50037", size = 2471065 }
 wheels = [
@@ -1699,9 +1637,13 @@ name = "numpy"
 version = "2.0.2"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version < '3.12' and sys_platform != 'win32'",
-    "python_full_version < '3.12' and platform_machine == 'ARM64' and sys_platform == 'win32'",
-    "python_full_version < '3.12' and platform_machine != 'ARM64' and sys_platform == 'win32'",
+    "python_full_version < '3.12' and platform_python_implementation != 'PyPy' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version < '3.12' and platform_python_implementation == 'PyPy' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version < '3.12' and sys_platform == 'emscripten'",
+    "python_full_version < '3.12' and platform_machine == 'ARM64' and platform_python_implementation != 'PyPy' and sys_platform == 'win32'",
+    "python_full_version < '3.12' and platform_machine == 'ARM64' and platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
+    "python_full_version < '3.12' and platform_machine != 'ARM64' and platform_python_implementation != 'PyPy' and sys_platform == 'win32'",
+    "python_full_version < '3.12' and platform_machine != 'ARM64' and platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a9/75/10dd1f8116a8b796cb2c737b674e02d02e80454bda953fa7e65d8c12b016/numpy-2.0.2.tar.gz", hash = "sha256:883c987dee1880e2a864ab0dc9892292582510604156762362d9326444636e78", size = 18902015 }
 wheels = [
@@ -1732,9 +1674,13 @@ name = "numpy"
 version = "2.3.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.12' and sys_platform != 'win32'",
-    "python_full_version >= '3.12' and platform_machine == 'ARM64' and sys_platform == 'win32'",
-    "python_full_version >= '3.12' and platform_machine != 'ARM64' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and platform_python_implementation != 'PyPy' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and platform_python_implementation == 'PyPy' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and sys_platform == 'emscripten'",
+    "python_full_version >= '3.12' and platform_machine == 'ARM64' and platform_python_implementation != 'PyPy' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and platform_machine == 'ARM64' and platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and platform_machine != 'ARM64' and platform_python_implementation != 'PyPy' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and platform_machine != 'ARM64' and platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/2e/19/d7c972dfe90a353dbd3efbbe1d14a5951de80c99c9dc1b93cd998d51dc0f/numpy-2.3.1.tar.gz", hash = "sha256:1ec9ae20a4226da374362cca3c62cd753faf2f951440b0e3b98e93c235441d2b", size = 20390372 }
 wheels = [
@@ -1927,7 +1873,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess", marker = "sys_platform != 'win32'" },
+    { name = "ptyprocess", marker = "(python_full_version < '3.12' and sys_platform == 'emscripten') or (sys_platform != 'emscripten' and sys_platform != 'win32')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450 }
 wheels = [
@@ -1950,6 +1896,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e5/69/882ee5c9d017149285cab114ebeab373308ef0f874fcdac9beb90e0ac4da/ply-3.11.tar.gz", hash = "sha256:00c7c1aaa88358b9c765b6d3000c6eec0ba42abca5351b095321aef446081da3", size = 159130 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a3/58/35da89ee790598a0700ea49b2a66594140f44dec458c07e8e3d4979137fc/ply-3.11-py2.py3-none-any.whl", hash = "sha256:096f9b8350b65ebd2fd1346b12452efe5b9607f7482813ffca50c22722a807ce", size = 49567 },
+]
+
+[[package]]
+name = "postgres"
+version = "4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "psycopg2-binary" },
+    { name = "psycopg2-pool" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9d/d3/2e3c6dee18902886e4bee95596ce893aba90b6a4f4f6008986acc53e039c/postgres-4.0.tar.gz", hash = "sha256:67c57de10c0d39cd5e3437eef7ac895b2b53747603b3edcd261dedec5ac04d4c", size = 19650 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e2/3a/f3cdb49983f5470412eb08ccf3a3a1bfc476acf1c010086019604f555ca8/postgres-4.0-py2.py3-none-any.whl", hash = "sha256:d81f757acbde2ca12785b8a3d44c39f1e49782963e84eb67d3e029ad67d6b1d3", size = 21706 },
 ]
 
 [[package]]
@@ -2059,6 +2018,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/2d/70/aa69c9f69cf09a01da224909ff6ce8b68faeef476f00f7ec377e8f03be70/psycopg2_binary-2.9.10-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:c3cc28a6fd5a4a26224007712e79b81dbaee2ffb90ff406256158ec4d7b52b47", size = 2959312 },
     { url = "https://files.pythonhosted.org/packages/d3/bd/213e59854fafe87ba47814bf413ace0dcee33a89c8c8c814faca6bc7cf3c/psycopg2_binary-2.9.10-cp312-cp312-win32.whl", hash = "sha256:ec8a77f521a17506a24a5f626cb2aee7850f9b69a0afe704586f63a464f3cd64", size = 1025191 },
     { url = "https://files.pythonhosted.org/packages/92/29/06261ea000e2dc1e22907dbbc483a1093665509ea586b29b8986a0e56733/psycopg2_binary-2.9.10-cp312-cp312-win_amd64.whl", hash = "sha256:18c5ee682b9c6dd3696dad6e54cc7ff3a1a9020df6a5c0f861ef8bfd338c3ca0", size = 1164031 },
+]
+
+[[package]]
+name = "psycopg2-pool"
+version = "1.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "psycopg2-binary" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ba/8f/a5ae396ec7aa955e9d234b7d38ae3e975a47fbf45c7f4571be4b0e7473b4/psycopg2-pool-1.2.tar.gz", hash = "sha256:e9ec38d5af15b7cef5546452797935129c99482b25646f258a21786bfb826bf3", size = 11385 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e6/37/99fc8b2725df9b9c3df8a184209480290d1300cd7a4cb14ed6b29ce6ef9e/psycopg2_pool-1.2-py2.py3-none-any.whl", hash = "sha256:3c8251f6fac3145eb4c5bf3407bb61543dbbcbb8117af1341cd7a8b5468aedbb", size = 7349 },
 ]
 
 [[package]]
@@ -2564,45 +2535,11 @@ wheels = [
 
 [[package]]
 name = "sling"
-version = "1.4.10.post2"
+version = "1.4.13"
 source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "sling-linux-amd64", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
-    { name = "sling-linux-arm64", marker = "platform_machine == 'aarch64' and sys_platform == 'linux'" },
-    { name = "sling-mac-amd64", marker = "platform_machine != 'arm64' and sys_platform == 'darwin'" },
-    { name = "sling-mac-arm64", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "sling-windows-amd64", marker = "sys_platform == 'win32'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/6e/30/196f080e05bb8dcd4b21848ef9ac78bbf9bc7a01e2a2812cfd86d3ec01b1/sling-1.4.10.post2.tar.gz", hash = "sha256:de021fbf462592d6c8f3902079729265d11305ece0b17c8d46daa83f5e991e78", size = 38430 }
+sdist = { url = "https://files.pythonhosted.org/packages/2a/c4/ea2cb76d08714dd28079f3717eb01d0ddd53117f2889ead824f27280afe9/sling-1.4.13.tar.gz", hash = "sha256:126613111dd21a66eeb990424185d453d7e0c126c0a7c9233718ee6cdad2d6db", size = 39757 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/26/a9/60f53045d1b09e67583795295eb0adfce22502af940dbe2f642547f9589e/sling-1.4.10.post2-py3-none-any.whl", hash = "sha256:99298b5f369de4ddbd8f415cbee18ad3462babce567a1e018b0312d02280c94b", size = 22809 },
-]
-
-[[package]]
-name = "sling-linux-amd64"
-version = "1.4.10.post2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/23/fa/5c236b0626f36b0ed418eedbb7246d3c628f91edb2d1e6be398c90b318ad/sling_linux_amd64-1.4.10.post2.tar.gz", hash = "sha256:514a6c0b3baeb5e99a54ba9414126cd14dc437348aea36b52d1de3b19cea846c", size = 88606140 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/49/ba/f223817d25ed45127ca092b38e3956f42d7c0e72f749d08aea153ad2bbbd/sling_linux_amd64-1.4.10.post2-py3-none-any.whl", hash = "sha256:b93754c62753c6e51e8a26fe1750c6efc1717456e5aa089340c9f3ffdf5ad19f", size = 89022519 },
-]
-
-[[package]]
-name = "sling-linux-arm64"
-version = "1.4.10.post2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/9d/1b/c35dae2e4c23a19a52b9e1401109ddcc41b5eabf170b07f518205ebf3279/sling_linux_arm64-1.4.10.post2.tar.gz", hash = "sha256:2c8f4454090c9f2e5975bc743f53ed64038737fce7b6d282a07175b7b8b8474d", size = 81504755 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/37/80/66b296e95ee92fcfe07fd929b98a2e521dfb4b491dfb0b33827c04473029/sling_linux_arm64-1.4.10.post2-py3-none-any.whl", hash = "sha256:dbcb00adbda465aeb6e16d22ec3c372dd35c782eeab540db3188d993b08e2f7f", size = 81794632 },
-]
-
-[[package]]
-name = "sling-mac-amd64"
-version = "1.4.10.post2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/bc/b6/c6f0d442c617bab1f7f24c31cba4501f0a11471a5bad93acbc6371204c9d/sling_mac_amd64-1.4.10.post2.tar.gz", hash = "sha256:4f01ddc2a8c916996d452db078bfa942e32ae36783bf47bea5ec6f8375fedef5", size = 100794648 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/1d/dd/0bb2d005984a473e04b636ea42988f639a3f0b51032e27f7f6e5b0de8e89/sling_mac_amd64-1.4.10.post2-py3-none-any.whl", hash = "sha256:362fb7b3d540440f9a7748835870bb0e50e87791d08b6c9bf97dd0f7aa414595", size = 101215508 },
+    { url = "https://files.pythonhosted.org/packages/8b/d9/9583ebf16c161c8f400254ecc6ba220d4240daf34bce9640dee73fee1cd6/sling-1.4.13-py3-none-any.whl", hash = "sha256:e47e6cad876120ca10cccd7498c09b87a24ef59565dca6b8a0d858b826678722", size = 24043 },
 ]
 
 [[package]]
@@ -2612,15 +2549,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/c5/48/153f94bbb1fd6eb5812fbc2269ef89d93fdea15802b626e88c20b2f1edc4/sling_mac_arm64-1.4.10.post2.tar.gz", hash = "sha256:52cbfa689b621fff1a7d1c9a8b8ab0c6b89c5a5bd86921a725496160d38849a8", size = 92866186 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0a/1f/12ac71c65e45a34181cf5916a43b37dcac8712d9105971e4c04bdf74999c/sling_mac_arm64-1.4.10.post2-py3-none-any.whl", hash = "sha256:d66b2d2119a01c8d38c25725c04044ee477762c6993dc13debcbd605c0429891", size = 93154303 },
-]
-
-[[package]]
-name = "sling-windows-amd64"
-version = "1.4.10.post2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/56/a4/02befe0c2a641e1bb55fc75ede65ce9a0b550c3ce62830768099218ea56f/sling_windows_amd64-1.4.10.post2.tar.gz", hash = "sha256:3d9985c21e6e002cbe945ca15a44ea37fd07008a62832fe4d530ae41c0ab512f", size = 89603317 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d5/5d/2442ec06c190b3b59c91109c65569a6f1a58fd07f71a8c225ce62ecd039d/sling_windows_amd64-1.4.10.post2-py3-none-any.whl", hash = "sha256:99a7aaade2e9289c3d9d47961908adef2ddab6fc125b8358278a1aa136644cb0", size = 90747125 },
 ]
 
 [[package]]

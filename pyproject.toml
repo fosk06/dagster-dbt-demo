@@ -3,14 +3,10 @@ name = "jaffle_platform"
 requires-python = ">=3.11,<3.13"
 version = "0.1.0"
 dependencies = [
-    "dagster==1.11.0",
-    "dagster-dbt>=0.26.20",
-    "dagster-dlt>=0.26.20",
-    "dagster-duckdb>=0.26.20",
-    "dagster-duckdb-pandas>=0.26.20",
-    "dagster-evidence>=0.1.6",
-    "dagster-postgres>=0.27.0",
-    "dagster-sling>=0.26.20",
+    "dagster-dbt>=0.27.2",
+    "dagster-dlt>=0.27.2",
+    "dagster-postgres>=0.27.2",
+    "dagster==1.11.2",
     "dbt-postgres>=1.9.0",
     "duckdb>=1.3.1",
     "jafgen>=0.4.14",
@@ -19,6 +15,15 @@ dependencies = [
     "psycopg2-binary>=2.9.10",
     "sqlalchemy>=2.0.41",
     "sqlmesh>=0.198.0",
+    "dagster-sling>=0.27.2",
+]
+
+[project.optional-dependencies]
+dbt = [
+    "dagster>=1.11.2",
+    "dlt>=1.13.0",
+    "duckdb>=1.3.1",
+    "postgres>=4.0",
 ]
 
 [dependency-groups]
