@@ -1,13 +1,4 @@
 gateways:
-  duckdb:
-    connection:
-      type: duckdb
-      database: /tmp/jaffle_platform.duckdb
-      concurrent_tasks: 1
-      register_comments: True
-      pre_ping: False
-      pretty_sql: True
-
   postgres:
     connection:
       type: postgres
