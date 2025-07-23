@@ -5,20 +5,24 @@ import dagster as dg
 @dataclass
 class SQLMeshTranslator:
     def normalize_segment(self, segment: str) -> str:
-        # Enlève les guillemets, espaces, et remplace tout caractère non valide par un underscore
         segment = segment.replace('"', '').replace("'", "")
         return re.sub(r'[^A-Za-z0-9_]', '_', segment)
 
     def get_asset_key(self, model) -> dg.AssetKey:
-        if hasattr(model, "fqn"):
-            parts = [self.normalize_segment(s) for s in model.fqn.split(".")]
-        else:
-            parts = [self.normalize_segment(model.name)]
-        return dg.AssetKey(parts)
+        catalog = self.normalize_segment(getattr(model, "catalog", "default"))
+        schema = self.normalize_segment(getattr(model, "schema_name", "default"))
+        view = self.normalize_segment(getattr(model, "view_name", "unknown"))
+        return dg.AssetKey([catalog, schema, view])
 
-    def get_asset_key_from_fqn(self, fqn: str) -> dg.AssetKey:
-        return dg.AssetKey([self.normalize_segment(s) for s in fqn.split(".")])
+    def get_asset_key_from_dep_str(self, dep_str: str) -> dg.AssetKey:
+        # Parse une string du type '"catalog"."schema"."view"'
+        parts = [self.normalize_segment(s) for s in re.findall(r'"([^"]+)"', dep_str)]
+        if len(parts) == 3:
+            return dg.AssetKey(parts)
+        # Fallback: split sur les points si pas de guillemets
+        return dg.AssetKey([self.normalize_segment(s) for s in dep_str.split(".")])
 
-    def get_deps_from_fqn(self, model_fqn: str, dag_graph: dict) -> list:
-        deps_fqn = dag_graph.get(model_fqn, set())
-        return [self.get_asset_key_from_fqn(dep) for dep in deps_fqn] 
+    def get_deps_from_model(self, model) -> list:
+        # model.depends_on est un set de strings du type '"catalog"."schema"."view"'
+        depends_on = getattr(model, "depends_on", set())
+        return [self.get_asset_key_from_dep_str(dep) for dep in depends_on] 
