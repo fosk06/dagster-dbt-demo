@@ -17,9 +17,9 @@ def sqlmesh_assets(context: dg.AssetExecutionContext, sqlmesh: SQLMeshResource):
     for asset_key in selected_asset_keys:
         yield dg.AssetMaterialization(
             asset_key=asset_key,
-            metadata=plan_metadata,
+            metadata={**plan_metadata},
+            data_version=dg.DataVersion("1"),
         )
-    return {asset_key: None for asset_key in selected_asset_keys}
 
 
 defs = Definitions(

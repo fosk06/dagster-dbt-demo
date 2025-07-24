@@ -135,3 +135,14 @@ class SQLMeshResource(ConfigurableResource):
             for asset_key in selected_asset_keys
             if asset_key in assetkey_to_model
         ]
+
+    def get_assetkey_to_snapshot(self) -> dict:
+        """
+        Returns a mapping {AssetKey: snapshot} for all models in the current context.
+        """
+        assetkey_to_snapshot = {}
+        for snapshot in self.context.snapshots.values():
+            model = snapshot.model
+            asset_key = self.translator.get_asset_key(model)
+            assetkey_to_snapshot[asset_key] = snapshot
+        return assetkey_to_snapshot
