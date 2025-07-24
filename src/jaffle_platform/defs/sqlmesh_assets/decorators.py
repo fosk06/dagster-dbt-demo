@@ -1,27 +1,29 @@
 import dagster as dg
 from .translator import SQLMeshTranslator
+from .resource import SQLMeshResource
 
-
-def sqlmesh_multi_asset(
+def sqlmesh_assets_factory(
     *,
-    sqlmesh_resource,
+    sqlmesh_resource: SQLMeshResource,
     name: str = "sqlmesh_assets",
     group_name: str = "sqlmesh",
     translator: SQLMeshTranslator = None,
 ):
+    """
+    Factory that returns a Dagster multi_asset for all SQLMesh models, with minimal user code.
+    """
     translator = translator or SQLMeshTranslator()
     models = list(sqlmesh_resource.get_models())
     assetkey_to_snapshot = sqlmesh_resource.get_assetkey_to_snapshot()
     extra_keys = ["cron", "tags", "kind", "dialect", "query", "partitioned_by", "clustered_by"]
 
-    return dg.multi_asset(
+    @dg.multi_asset(
         name=name,
         group_name=group_name,
         specs=[
             dg.AssetSpec(
                 key=translator.get_asset_key(model),
                 deps=translator.get_deps_from_model(model),
-                # code_version=assetkey_to_snapshot.get(translator.get_asset_key(model)).version if assetkey_to_snapshot.get(translator.get_asset_key(model)) else None,
                 code_version="1",
                 metadata={
                     "dagster/table_schema": translator.get_table_metadata(model).column_schema,
@@ -31,4 +33,8 @@ def sqlmesh_multi_asset(
             )
             for model in models
         ],
-    ) 
+    )
+    def _sqlmesh_assets(context: dg.AssetExecutionContext, sqlmesh: SQLMeshResource):
+        yield from sqlmesh.materialize_all_assets(context)
+
+    return _sqlmesh_assets 

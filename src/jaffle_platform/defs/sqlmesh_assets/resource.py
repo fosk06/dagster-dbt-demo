@@ -91,6 +91,31 @@ class SQLMeshResource(ConfigurableResource):
         self.context.apply(plan)
         return plan
 
+    def materialize_all_assets(self, context):
+        """
+        Materialize all selected SQLMesh assets for Dagster in a single, centralized method.
+        Handles selection, materialization, snapshot extraction, topological ordering,
+        and yields AssetMaterialization and Output for each asset.
+        """
+        selected_asset_keys = context.selected_asset_keys
+        models_to_materialize = self.get_models_to_materialize(selected_asset_keys)
+        plan = self.materialize_assets(models_to_materialize)
+        plan_metadata = self.extract_plan_metadata(plan)
+        assetkey_to_snapshot = self.get_assetkey_to_snapshot()
+        ordered_asset_keys = self.get_topologically_sorted_asset_keys(plan, selected_asset_keys)
+        for asset_key in ordered_asset_keys:
+            snapshot = assetkey_to_snapshot.get(asset_key)
+            yield dg.AssetMaterialization(
+                asset_key=asset_key,
+                metadata={**plan_metadata, "sqlmesh_snapshot_version": getattr(snapshot, "version", None)},
+            )
+            yield dg.Output(
+                value=None,  # Replace with actual value if available
+                output_name=asset_key.to_python_identifier(),
+                data_version=dg.DataVersion(str(getattr(snapshot, "version", ""))) if snapshot else None,
+                metadata={"sqlmesh_snapshot_version": getattr(snapshot, "version", None)}
+            )
+
     def extract_metadata(self, obj, fields: list[str], prefix: str = "sqlmesh_") -> dict:
         """
         Extract and format the specified fields from a SQLMesh object (plan, model, etc.)
