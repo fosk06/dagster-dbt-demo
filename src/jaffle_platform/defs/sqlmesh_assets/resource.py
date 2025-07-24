@@ -146,3 +146,22 @@ class SQLMeshResource(ConfigurableResource):
             asset_key = self.translator.get_asset_key(model)
             assetkey_to_snapshot[asset_key] = snapshot
         return assetkey_to_snapshot
+
+    def get_topologically_sorted_asset_keys(self, plan, selected_asset_keys) -> list:
+        """
+        Returns the selected_asset_keys sorted in topological order according to the SQLMesh DAG.
+        """
+        models = list(self.get_models())
+        assetkey_to_model = self.translator.get_assetkey_to_model(models)
+        # Utilise FQN comme clé
+        fqn_to_model = {model.fqn: model for model in models}
+        fqn_to_assetkey = {model.fqn: self.translator.get_asset_key(model) for model in models}
+        # FQN sélectionnés
+        selected_fqns = set(model.fqn for key, model in assetkey_to_model.items() if key in selected_asset_keys)
+        topo_fqns = self.context.dag.sorted
+        ordered_asset_keys = [
+            fqn_to_assetkey[fqn]
+            for fqn in topo_fqns
+            if fqn in selected_fqns and fqn in fqn_to_assetkey
+        ]
+        return ordered_asset_keys

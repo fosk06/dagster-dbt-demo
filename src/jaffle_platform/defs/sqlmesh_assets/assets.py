@@ -14,11 +14,20 @@ def sqlmesh_assets(context: dg.AssetExecutionContext, sqlmesh: SQLMeshResource):
     models_to_materialize = sqlmesh.get_models_to_materialize(selected_asset_keys)
     plan = sqlmesh.materialize_assets(models_to_materialize)
     plan_metadata = sqlmesh.extract_plan_metadata(plan)
-    for asset_key in selected_asset_keys:
+    assetkey_to_snapshot = sqlmesh.get_assetkey_to_snapshot()
+    # Use topological order for yielding outputs
+    ordered_asset_keys = sqlmesh.get_topologically_sorted_asset_keys(plan, selected_asset_keys)
+    for asset_key in ordered_asset_keys:
+        snapshot = assetkey_to_snapshot.get(asset_key)
         yield dg.AssetMaterialization(
             asset_key=asset_key,
-            metadata={**plan_metadata},
-            data_version=dg.DataVersion("1"),
+            metadata={**plan_metadata, "sqlmesh_snapshot_version": getattr(snapshot, "version", None)},
+        )
+        yield dg.Output(
+            value=None,  # Replace with actual value if available
+            output_name=asset_key.to_python_identifier(),
+            data_version=dg.DataVersion(str(getattr(snapshot, "version", ""))) if snapshot else None,
+            metadata={"sqlmesh_snapshot_version": getattr(snapshot, "version", None)}
         )
 
 
