@@ -73,3 +73,12 @@ class SQLMeshResource(ConfigurableResource):
 
     def clear_caches(self):
         return self.context.clear_caches()
+
+    def materialize_assets(self, models):
+        """
+        Materialize the given list of SQLMesh models using run (plan + apply).
+        """
+        model_names = [m.name for m in models]
+        plan = self.context.plan(select_models=model_names, auto_apply=True)
+        self.context.apply(plan)
+        return plan

@@ -11,6 +11,7 @@ def sqlmesh_multi_asset(
 ):
     translator = translator or SQLMeshTranslator()
     models = list(sqlmesh_resource.get_models())
+    extra_keys = ["cron", "tags", "kind", "dialect", "query", "partitioned_by", "clustered_by"]
 
     return dg.multi_asset(
         name=name,
@@ -20,8 +21,9 @@ def sqlmesh_multi_asset(
                 key=translator.get_asset_key(model),
                 deps=translator.get_deps_from_model(model),
                 metadata={
-                    "sqlmesh_model": model,
-                    "sqlmesh_translator": translator,
+                    "dagster/table_schema": translator.get_table_metadata(model).column_schema,
+                    "dagster/table_name": translator.get_table_metadata(model).table_name,
+                    **translator.serialize_metadata(model, extra_keys),
                 },
             )
             for model in models
