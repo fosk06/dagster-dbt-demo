@@ -14,7 +14,7 @@ dependencies = [
     "pandas>=2.2.1",
     "psycopg2-binary>=2.9.10",
     "sqlalchemy>=2.0.41",
-    "sqlmesh>=0.198.0",
+    "sqlmesh[web]>=0.198.0",
     "dagster-sling>=0.27.2",
 ]
 

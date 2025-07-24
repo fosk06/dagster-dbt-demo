@@ -47,7 +47,10 @@ class SQLMeshResource(ConfigurableResource):
         return self.context.evaluate(model_or_snapshot, **kwargs)
 
     def run(self, **kwargs):
-        return self.context.run(**kwargs)
+        """
+        Run the entire dag through the scheduler for the configured target environment.
+        """
+        return self.context.run(environment=self.target, **kwargs)
 
     def plan(self, **kwargs):
         return self.context.plan(**kwargs)
@@ -56,7 +59,10 @@ class SQLMeshResource(ConfigurableResource):
         return self.context.apply(plan, **kwargs)
 
     def audit(self, **kwargs):
-        return self.context.audit(**kwargs)
+        """
+        Audit models in the configured target environment.
+        """
+        return self.context.audit(environment=self.target, **kwargs)
 
     def test(self, **kwargs):
         return self.context.test(**kwargs)
@@ -65,7 +71,10 @@ class SQLMeshResource(ConfigurableResource):
         return self.context.lint_models(**kwargs)
 
     def diff(self, **kwargs):
-        return self.context.diff(**kwargs)
+        """
+        Show a diff of the current context with the configured target environment.
+        """
+        return self.context.diff(environment=self.target, **kwargs)
 
     def get_dag(self, **kwargs):
         return self.context.get_dag(**kwargs)
@@ -87,7 +96,7 @@ class SQLMeshResource(ConfigurableResource):
         Materialize the given list of SQLMesh models using run (plan + apply).
         """
         model_names = [m.name for m in models]
-        plan = self.context.plan(select_models=model_names, auto_apply=True)
+        plan = self.context.plan(environment=self.target, select_models=model_names, auto_apply=True)
         self.context.apply(plan)
         return plan
 
