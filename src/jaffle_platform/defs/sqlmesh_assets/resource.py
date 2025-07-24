@@ -1,8 +1,8 @@
 from dagster import ConfigurableResource, get_dagster_logger
 from pydantic import Field
 from sqlmesh.core.context import Context
-from .translator import SQLMeshTranslator
 import dagster as dg
+from .translator import SQLMeshTranslator
 
 class SQLMeshResource(ConfigurableResource):
     project_dir: str = Field(
@@ -17,6 +17,14 @@ class SQLMeshResource(ConfigurableResource):
             "The SQLMesh target to use for execution, prod by default"
         ),
     )
+
+    @property
+    def translator(self):
+        """
+        Returns a SQLMeshTranslator instance for mapping AssetKeys and models.
+        Stateless, so always returns a new instance.
+        """
+        return SQLMeshTranslator()
 
     @property
     def context(self) -> Context:
@@ -120,9 +128,8 @@ class SQLMeshResource(ConfigurableResource):
         """
         Returns the list of SQLMesh models corresponding to the selected AssetKeys.
         """
-        translator = SQLMeshTranslator()
         models = list(self.get_models())
-        assetkey_to_model = translator.get_assetkey_to_model(models)
+        assetkey_to_model = self.translator.get_assetkey_to_model(models)
         return [
             assetkey_to_model[asset_key]
             for asset_key in selected_asset_keys

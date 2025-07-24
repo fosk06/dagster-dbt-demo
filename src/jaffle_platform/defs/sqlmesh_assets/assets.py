@@ -1,9 +1,8 @@
 from dagster import Definitions, AssetMaterialization
-from .resource import SQLMeshResource
-from .translator import SQLMeshTranslator
 import dagster as dg
 import pandas as pd
 from .decorators import sqlmesh_multi_asset
+from .resource import SQLMeshResource
 
 @sqlmesh_multi_asset(
     sqlmesh_resource=SQLMeshResource(project_dir="sqlmesh_project", target="dev"),
@@ -20,6 +19,7 @@ def sqlmesh_assets(context: dg.AssetExecutionContext, sqlmesh: SQLMeshResource):
             asset_key=asset_key,
             metadata=plan_metadata,
         )
+    return {asset_key: None for asset_key in selected_asset_keys}
 
 
 defs = Definitions(
