@@ -82,3 +82,49 @@ class SQLMeshResource(ConfigurableResource):
         plan = self.context.plan(select_models=model_names, auto_apply=True)
         self.context.apply(plan)
         return plan
+
+    def extract_metadata(self, obj, fields: list[str], prefix: str = "sqlmesh_") -> dict:
+        """
+        Extract and format the specified fields from a SQLMesh object (plan, model, etc.)
+        for use as Dagster asset metadata.
+
+        Args:
+            obj: The SQLMesh object (plan, model, etc.) to extract metadata from.
+            fields: List of attribute names to extract from the object.
+            prefix: String prefix to add to each metadata key (default: 'sqlmesh_').
+
+        Returns:
+            dict: {prefix+field: str(value)} for each field found on the object.
+        """
+        return {f"{prefix}{field}": str(getattr(obj, field, None)) for field in fields}
+
+    def extract_plan_metadata(self, plan) -> dict:
+        """
+        Extracts and formats a standard set of metadata fields from a SQLMesh plan object
+        for use as Dagster AssetMaterialization metadata. This includes plan_id, environment,
+        start/end times, backfill info, and other plan diagnostics.
+
+        Args:
+            plan: The SQLMesh plan object to extract metadata from.
+
+        Returns:
+            dict: Metadata fields with 'sqlmesh_plan_' prefix, ready to be passed to Dagster.
+        """
+        fields = [
+            "plan_id", "environment", "start", "end", "has_changes",
+            "models_to_backfill", "requires_backfill", "modified_snapshots", "user_provided_flags"
+        ]
+        return self.extract_metadata(plan, fields, prefix="sqlmesh_plan_")
+
+    def get_models_to_materialize(self, selected_asset_keys) -> list:
+        """
+        Returns the list of SQLMesh models corresponding to the selected AssetKeys.
+        """
+        translator = SQLMeshTranslator()
+        models = list(self.get_models())
+        assetkey_to_model = translator.get_assetkey_to_model(models)
+        return [
+            assetkey_to_model[asset_key]
+            for asset_key in selected_asset_keys
+            if asset_key in assetkey_to_model
+        ]
