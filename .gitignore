@@ -82,3 +82,4 @@ sqlmesh_project/logs/
 sqlmesh_project/.cache/
 logs/
 .telemetry
+storage/57f1ca18-8311-49d6-9c24-ffb9d494d7bf/compute_logs/pnvteabc.err
