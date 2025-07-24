@@ -112,10 +112,20 @@ def print_sqlmesh_state(state: Dict[str, Any]) -> None:
     for model, ts in state.get("last_materializations", {}).items():
         model_str = "/".join(model) if isinstance(model, (list, tuple)) else str(model)
         if ts:
+            print(f"{model_str}: raw ts = {ts}")
             dt = datetime.utcfromtimestamp(ts / 1000)
             print(f"{model_str}: {dt} (UTC)")
         else:
             print(f"{model_str}: never materialized")
+    print("Last snapshot updates:")
+    for model, ts in state.get("last_snapshot_dates", {}).items():
+        model_str = "/".join(model) if isinstance(model, (list, tuple)) else str(model)
+        if ts:
+            print(f"{model_str}: snapshot updated_ts = {ts}")
+            dt = datetime.utcfromtimestamp(ts / 1000)
+            print(f"{model_str}: {dt} (UTC)")
+        else:
+            print(f"{model_str}: never updated")
 
 def get_last_materialization_dates(state: Dict[str, Any], environment: str = "prod") -> Dict[str, Any]:
     context = state["context"]
@@ -123,10 +133,12 @@ def get_last_materialization_dates(state: Dict[str, Any], environment: str = "pr
     env = next((e for e in envs if e.name == environment), None)
     if not env:
         state["last_materializations"] = {}
+        state["last_snapshot_dates"] = {}
         return state
 
     snapshots = context.state_reader.get_snapshots(env.snapshots)
     last_materializations = {}
+    last_snapshot_dates = {}
     for name, snapshot in snapshots.items():
         model_name = getattr(snapshot, "model_name", None)
         if not model_name and hasattr(snapshot, "model"):
@@ -140,7 +152,14 @@ def get_last_materialization_dates(state: Dict[str, Any], environment: str = "pr
             last_materializations[tuple(parsed_name)] = last_end
         else:
             last_materializations[tuple(parsed_name)] = None
+        # Ajout de la date de snapshot (updated_ts)
+        updated_ts = getattr(snapshot, "updated_ts", None)
+        if updated_ts:
+            last_snapshot_dates[tuple(parsed_name)] = updated_ts
+        else:
+            last_snapshot_dates[tuple(parsed_name)] = None
     state["last_materializations"] = last_materializations
+    state["last_snapshot_dates"] = last_snapshot_dates
     return state
 
 def create_sqlmesh_state(paths: str = "sqlmesh_project") -> Dict[str, Any]:

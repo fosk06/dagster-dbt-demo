@@ -45,6 +45,8 @@ registry_modules = [
     "jaffle_platform.components.*",
 ]
 
+[tool.dg.cli]
+
 [tool.uv.sources]
 dagster-sqlmesh = { path = "../dagster-sqlmesh", editable = true }
 

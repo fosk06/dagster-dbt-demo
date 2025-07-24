@@ -81,3 +81,4 @@ dbt_project/target/jaffle_platform-2a853ae-88dcda0/run/jaffle_platform/models/ma
 sqlmesh_project/logs/
 sqlmesh_project/.cache/
 logs/
+.telemetry
