@@ -194,30 +194,32 @@ The project uses the following configurations:
 
 ## Querying Data
 
-To query data with DuckDB, you have two options:
+To query data with PostgreSQL, you have two main options:
 
-### 1. Interactive mode
+### 1. Interactive mode (psql)
 
 ```bash
-duckdb /tmp/jaffle_platform.duckdb
+psql -h localhost -p 5432 -U jaffle -d jaffle_db
 ```
+
+_(You will be prompted for the password, which is usually set in your environment or docker-compose as `jaffle`.)_
 
 ### 2. Command line mode (recommended)
 
 ```bash
 # General syntax
-duckdb /tmp/jaffle_platform.duckdb -c "YOUR_QUERY;"
+psql -h localhost -p 5432 -U jaffle -d jaffle_db -c "YOUR_QUERY;"
 
 # Examples:
 
 # List available schemas
-duckdb /tmp/jaffle_platform.duckdb -c "SHOW SCHEMAS;"
+psql -h localhost -p 5432 -U jaffle -d jaffle_db -c "\dn"
 
-# List tables and views in the main schema
-duckdb /tmp/jaffle_platform.duckdb -c "SHOW TABLES IN main;"
+# List tables in the 'main' schema
+psql -h localhost -p 5432 -U jaffle -d jaffle_db -c "\dt main.*"
 
 # Top 10 customers by total spent
-duckdb /tmp/jaffle_platform.duckdb -c "
+psql -h localhost -p 5432 -U jaffle -d jaffle_db -c "
 SELECT
     customer_name,
     total_revenue,
@@ -228,7 +230,7 @@ ORDER BY total_revenue DESC
 LIMIT 10;"
 
 # Sales by product type and month
-duckdb /tmp/jaffle_platform.duckdb -c "
+psql -h localhost -p 5432 -U jaffle -d jaffle_db -c "
 SELECT
     date_trunc('month', order_date) as month,
     product_type,
@@ -240,7 +242,7 @@ GROUP BY 1, 2
 ORDER BY 1, 2;"
 
 # Restaurant performance
-duckdb /tmp/jaffle_platform.duckdb -c "
+psql -h localhost -p 5432 -U jaffle -d jaffle_db -c "
 SELECT
     s.store_name,
     count(DISTINCT o.order_id) as number_of_orders,
@@ -253,7 +255,7 @@ GROUP BY 1
 ORDER BY total_revenue DESC;"
 
 # Most profitable products
-duckdb /tmp/jaffle_platform.duckdb -c "
+psql -h localhost -p 5432 -U jaffle -d jaffle_db -c "
 SELECT
     product_name,
     product_type,
@@ -314,14 +316,6 @@ For example, to create a check for the `product_sentiment_scores` asset:
 dg scaffold defs dagster.asset_check --format=python --asset-key product_sentiment_scores assets_checks/product_sentiment_scores.py
 ```
 
-## Limitations
-
-- **DuckDB lockfile limitations**: Because this project uses DuckDB as the database engine, its lockfile system can prevent multiple materializations from running in parallel. If you attempt to trigger many asset materializations at the same time, you may encounter database lock errors or serialization issues. This is a known limitation of DuckDB and should be considered when designing high-concurrency workflows.
-
-## Data Contract Validation Example: `raw_tweets` Source
-
-This project demonstrates advanced data quality validation using the [Data Contract Specification](https://datacontract.com/) and its open-source tooling.
-
 ### Custom Dataset: `raw_tweets`
 
 - The `raw_tweets` dataset is ingested from a parquet file.
@@ -343,4 +337,4 @@ This invalid dataset is included specifically to demonstrate what happens when d
 - This approach ensures that data ingested into the platform strictly conforms to agreed-upon contracts, improving reliability and trust in downstream analytics.
 - The project demonstrates both a passing and a failing case, making it easy to test and showcase data contract enforcement in a modern data stack.
 
-See the `tools/parquet_file_generator.py` script and the `src/jaffle_platform/defs/source_assets/data_contracts/raw_tweets.yaml` contract for implementation details.
+See the `tools/parquet_file_generator.py` script and the `src/jaffle_platform/defs/source_assets/data_contracts/raw_tweets.yaml`
