@@ -13,6 +13,7 @@ sqlmesh_assets = sqlmesh_assets_factory(
     sqlmesh_resource=sqlmesh_resource,
     name="sqlmesh_multi_asset",
     group_name="sqlmesh",
+    op_tags={"team": "data", "env": "prod"},
 )
 
 defs = Definitions(

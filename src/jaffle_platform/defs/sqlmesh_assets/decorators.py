@@ -9,9 +9,11 @@ def sqlmesh_assets_factory(
     name: str = "sqlmesh_assets",
     group_name: str = "sqlmesh",
     translator: SQLMeshTranslator = None,
+    op_tags: dict = None,
 ):
     """
     Factory that returns a Dagster multi_asset for all SQLMesh models, with minimal user code.
+    op_tags: Optional dict of tags to attach to the Dagster op (visible in the UI)
     """
     translator = translator or SQLMeshTranslator()
     models = list(sqlmesh_resource.get_models())
@@ -35,6 +37,7 @@ def sqlmesh_assets_factory(
             )
             for model in models
         ],
+        op_tags=op_tags,
     )
     def _sqlmesh_assets(context: dg.AssetExecutionContext, sqlmesh: SQLMeshResource):
         yield from sqlmesh.materialize_all_assets(context)
