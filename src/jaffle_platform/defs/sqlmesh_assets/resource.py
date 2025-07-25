@@ -17,6 +17,10 @@ class SQLMeshResource(ConfigurableResource):
             "The SQLMesh target to use for execution, prod by default"
         ),
     )
+    allow_breaking_changes: bool = Field(
+        default=True,
+        description="Allow materialization even if breaking changes are detected (default: True). Set to False to abort materialization."
+    )
 
     @property
     def translator(self):
@@ -94,23 +98,32 @@ class SQLMeshResource(ConfigurableResource):
     def materialize_assets(self, models, context=None):
         """
         Materialize the given list of SQLMesh models using plan + apply.
-        If breaking changes are detected, logs details and raises an exception to abort materialization.
+        If breaking changes are detected and allow_breaking_changes is False, logs details and raises an exception to abort materialization.
         Uses context.log if available for logging.
         """
         model_names = [m.name for m in models]
-        plan = self.context.plan(
-            environment=self.target,
-            select_models=model_names,
-            auto_apply=False,
-        )
-        has_breaking_changes = self.has_breaking_changes(plan, context=context)
-        if has_breaking_changes:
-            raise Exception(
-                f"Breaking changes detected in plan {getattr(plan, 'plan_id', None)}. "
-                "Materialization aborted. See logs for details."
+        if not self.allow_breaking_changes:
+            plan = self.context.plan(
+                environment=self.target,
+                select_models=model_names,
+                auto_apply=False,
             )
+            has_breaking_changes = self.has_breaking_changes(plan, context=context)
+            if has_breaking_changes:
+                raise Exception(
+                    f"Breaking changes detected in plan {getattr(plan, 'plan_id', None)}. "
+                    "Materialization aborted. See logs for details."
+                )
+            else:
+                self.context.apply(plan)
         else:
-            self.context.apply(plan)
+            plan = self.context.plan(
+                environment=self.target,
+                select_models=model_names,
+                auto_apply=True,
+                no_prompts=True,
+                no_auto_categorization=False,
+            )
         return plan
 
     def materialize_all_assets(self, context):
