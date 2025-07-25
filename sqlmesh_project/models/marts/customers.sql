@@ -31,7 +31,7 @@ joined as (
         customer_orders_summary.count_lifetime_orders,
         customer_orders_summary.first_ordered_at,
         customer_orders_summary.last_ordered_at,
-        true as is_truesssssssssss,
+        true as is_truessssssss,
         customer_orders_summary.lifetime_spend_pretax,
         customer_orders_summary.lifetime_tax_paid,
         customer_orders_summary.lifetime_spend,

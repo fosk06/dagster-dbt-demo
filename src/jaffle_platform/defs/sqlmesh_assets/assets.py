@@ -1,4 +1,4 @@
-from dagster import Definitions
+from dagster import Definitions, RetryPolicy
 from .decorators import sqlmesh_assets_factory
 from .resource import SQLMeshResource
 
@@ -14,6 +14,7 @@ sqlmesh_assets = sqlmesh_assets_factory(
     name="sqlmesh_multi_asset",
     group_name="sqlmesh",
     op_tags={"team": "data", "env": "prod"},
+    retry_policy=RetryPolicy(max_retries=2, delay=1.0),
 )
 
 defs = Definitions(
