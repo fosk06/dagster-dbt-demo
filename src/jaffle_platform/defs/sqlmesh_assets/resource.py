@@ -91,12 +91,26 @@ class SQLMeshResource(ConfigurableResource):
     def clear_caches(self):
         return self.context.clear_caches()
 
-    def materialize_assets(self, models):
+    def materialize_assets(self, models, context=None):
         """
-        Materialize the given list of SQLMesh models using run (plan + apply).
+        Materialize the given list of SQLMesh models using plan + apply.
+        If breaking changes are detected, logs details and raises an exception to abort materialization.
+        Uses context.log if available for logging.
         """
         model_names = [m.name for m in models]
-        plan = self.context.plan(environment=self.target, select_models=model_names, auto_apply=True)
+        plan = self.context.plan(
+            environment=self.target,
+            select_models=model_names,
+            auto_apply=False,
+        )
+        has_breaking_changes = self.has_breaking_changes(plan, context=context)
+        if has_breaking_changes:
+            raise Exception(
+                f"Breaking changes detected in plan {getattr(plan, 'plan_id', None)}. "
+                "Materialization aborted. See logs for details."
+            )
+        else:
+            self.context.apply(plan)
         return plan
 
     def materialize_all_assets(self, context):
@@ -107,7 +121,7 @@ class SQLMeshResource(ConfigurableResource):
         """
         selected_asset_keys = context.selected_asset_keys
         models_to_materialize = self.get_models_to_materialize(selected_asset_keys)
-        plan = self.materialize_assets(models_to_materialize)
+        plan = self.materialize_assets(models_to_materialize, context=context)
         plan_metadata = self.extract_plan_metadata(plan)
         assetkey_to_snapshot = self.get_assetkey_to_snapshot()
         ordered_asset_keys = self.get_topologically_sorted_asset_keys(plan, selected_asset_keys)
@@ -198,3 +212,40 @@ class SQLMeshResource(ConfigurableResource):
             if fqn in selected_fqns and fqn in fqn_to_assetkey
         ]
         return ordered_asset_keys
+
+    def has_breaking_changes(self, plan, context=None) -> bool:
+        """
+        Returns True if the given SQLMesh plan contains breaking or indirect breaking changes.
+        Logs the models and descriptions of breaking changes, using context.log if available.
+        """
+        breaking_categories = {"breaking", "indirect_breaking"}
+        categorized = getattr(plan.context_diff, "categorized", {})
+        descriptions = getattr(plan.context_diff, "categorized_descriptions", {})
+
+        breaking_models = [
+            (snapshot, category)
+            for snapshot, category in categorized.items()
+            if category in breaking_categories
+        ]
+
+        def log_error(msg):
+            if context and hasattr(context, "log"):
+                context.log.error(msg)
+            else:
+                self.logger.error(msg)
+        def log_info(msg):
+            if context and hasattr(context, "log"):
+                context.log.info(msg)
+            else:
+                self.logger.info(msg)
+
+        if breaking_models:
+            log_error(f"Breaking changes detected in plan {getattr(plan, 'plan_id', None)}:")
+            for snapshot, category in breaking_models:
+                model_name = getattr(snapshot, "name", str(snapshot))
+                desc = descriptions.get(snapshot, "No description available.")
+                log_error(f"- {model_name} ({category}): {desc}")
+            return True
+        else:
+            log_info(f"No breaking changes detected in plan {getattr(plan, 'plan_id', None)}.")
+            return False

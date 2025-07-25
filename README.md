@@ -268,6 +268,61 @@ ORDER BY total_profit DESC
 LIMIT 10;"
 ```
 
+## Querying SQLMesh Project Tables
+
+After materializing your models with SQLMesh, logical views are created in your target PostgreSQL database. These views are typically located in a schema that matches the prefix of your model names (for example, `sqlmesh_jaffle_platform`).
+
+### How to query SQLMesh views in PostgreSQL
+
+1. **Connect to your database:**
+
+```bash
+psql -h localhost -p 5432 -U jaffle -d jaffle_db
+```
+
+2. **List available schemas:**
+
+```sql
+\dn
+```
+
+3. **List views in the SQLMesh schema:**
+
+```sql
+\dv+ sqlmesh_jaffle_platform.*
+```
+
+4. **Query a view:**
+
+```sql
+SELECT * FROM sqlmesh_jaffle_platform.customers LIMIT 10;
+```
+
+5. **Join multiple views:**
+
+```sql
+SELECT
+  c.customer_id,
+  c.customer_name,
+  o.order_id,
+  o.order_date
+FROM sqlmesh_jaffle_platform.customers c
+JOIN sqlmesh_jaffle_platform.orders o
+  ON c.customer_id = o.customer_id
+LIMIT 20;
+```
+
+6. **Inspect the structure of a view:**
+
+```sql
+\d+ sqlmesh_jaffle_platform.customers
+```
+
+**Note:**
+
+- Replace `sqlmesh_jaffle_platform` with the schema name used in your model definitions if different.
+- You can use these views in any SQL query, BI tool, or Python client (e.g., pandas, sqlalchemy) as you would with any regular PostgreSQL table or view.
+
 ## Cheatsheet
 
 ### Scaffolding an Asset Check
