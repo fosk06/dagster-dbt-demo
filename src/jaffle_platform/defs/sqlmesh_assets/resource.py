@@ -200,10 +200,8 @@ class SQLMeshResource(ConfigurableResource):
         """
         models = list(self.get_models())
         assetkey_to_model = self.translator.get_assetkey_to_model(models)
-        # Utilise FQN comme clé
         fqn_to_model = {model.fqn: model for model in models}
         fqn_to_assetkey = {model.fqn: self.translator.get_asset_key(model) for model in models}
-        # FQN sélectionnés
         selected_fqns = set(model.fqn for key, model in assetkey_to_model.items() if key in selected_asset_keys)
         topo_fqns = self.context.dag.sorted
         ordered_asset_keys = [
