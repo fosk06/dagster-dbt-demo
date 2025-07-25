@@ -132,7 +132,7 @@ class SQLMeshResource(ConfigurableResource):
                 metadata={**plan_metadata, "sqlmesh_snapshot_version": getattr(snapshot, "version", None)},
             )
             yield dg.Output(
-                value=None,  # Replace with actual value if available
+                value=None,
                 output_name=asset_key.to_python_identifier(),
                 data_version=dg.DataVersion(str(getattr(snapshot, "version", ""))) if snapshot else None,
                 metadata={"sqlmesh_snapshot_version": getattr(snapshot, "version", None)}
