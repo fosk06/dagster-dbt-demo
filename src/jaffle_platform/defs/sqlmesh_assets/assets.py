@@ -3,7 +3,9 @@ from .decorators import sqlmesh_assets_factory
 from .resource import SQLMeshResource
 
 sqlmesh_resource = SQLMeshResource(
-    project_dir="sqlmesh_project", 
+    project_dir="sqlmesh_project",
+    gateway="postgres",
+    config_override=None,
     allow_breaking_changes=True,
 )
 

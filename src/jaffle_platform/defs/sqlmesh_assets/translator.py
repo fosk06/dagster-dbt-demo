@@ -63,3 +63,23 @@ class SQLMeshTranslator:
         Returns a mapping {AssetKey: model} for a given list of SQLMesh models.
         """
         return {self.get_asset_key(model): model for model in models}
+
+    # --- Méthodes inspirées de l'open source ---
+    def get_asset_key_name(self, fqn: str) -> list:
+        # Découpe un FQN en segments (catalog, schema, name)
+        # FQN attendu : 'catalog.schema.name' ou similaire
+        return [self.normalize_segment(s) for s in fqn.split(".")]
+
+    def get_group_name(self, context, model) -> str:
+        # Utilise le FQN du modèle pour déterminer le groupe (avant-dernier segment)
+        path = self.get_asset_key_name(getattr(model, "fqn", getattr(model, "view_name", "")))
+        return path[-2] if len(path) >= 2 else "default"
+
+    def get_tags(self, context, model) -> dict:
+        # Retourne les tags du modèle sous forme de dict
+        tags = getattr(model, "tags", set())
+        return {k: "true" for k in tags}
+
+    def _get_context_dialect(self, context) -> str:
+        # Retourne le dialecte SQL du contexte SQLMesh
+        return getattr(getattr(context, "engine_adapter", None), "dialect", "")

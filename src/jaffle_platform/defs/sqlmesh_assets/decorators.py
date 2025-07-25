@@ -1,6 +1,7 @@
 import dagster as dg
 from .translator import SQLMeshTranslator
 from .resource import SQLMeshResource
+from .sqlmesh_asset_utils import get_assetkey_to_snapshot
 
 def sqlmesh_assets_factory(
     *,
@@ -14,7 +15,7 @@ def sqlmesh_assets_factory(
     """
     translator = translator or SQLMeshTranslator()
     models = list(sqlmesh_resource.get_models())
-    assetkey_to_snapshot = sqlmesh_resource.get_assetkey_to_snapshot()
+    assetkey_to_snapshot = get_assetkey_to_snapshot(sqlmesh_resource.context, translator)
     extra_keys = ["cron", "tags", "kind", "dialect", "query", "partitioned_by", "clustered_by"]
 
     @dg.multi_asset(
@@ -25,6 +26,7 @@ def sqlmesh_assets_factory(
                 key=translator.get_asset_key(model),
                 deps=translator.get_deps_from_model(model),
                 code_version="1",
+                kinds={"sqlmesh"},
                 metadata={
                     "dagster/table_schema": translator.get_table_metadata(model).column_schema,
                     "dagster/table_name": translator.get_table_metadata(model).table_name,
