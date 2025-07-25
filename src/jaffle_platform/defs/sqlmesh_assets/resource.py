@@ -212,40 +212,35 @@ class SQLMeshResource(ConfigurableResource):
             if fqn in selected_fqns and fqn in fqn_to_assetkey
         ]
         return ordered_asset_keys
-
+    
     def has_breaking_changes(self, plan, context=None) -> bool:
         """
-        Returns True if the given SQLMesh plan contains breaking or indirect breaking changes.
-        Logs the models and descriptions of breaking changes, using context.log if available.
+        Returns True if the given SQLMesh plan contains breaking changes
+        (any directly or indirectly modified models).
+        Logs the models concernés, using context.log if available.
         """
-        breaking_categories = {"breaking", "indirect_breaking"}
-        categorized = getattr(plan.context_diff, "categorized", {})
-        descriptions = getattr(plan.context_diff, "categorized_descriptions", {})
+        directly_modified = getattr(plan, "directly_modified", set())
+        indirectly_modified = getattr(plan, "indirectly_modified", set())
 
-        breaking_models = [
-            (snapshot, category)
-            for snapshot, category in categorized.items()
-            if category in breaking_categories
-        ]
+        directly = list(directly_modified)
+        indirectly = [item for sublist in indirectly_modified.values() for item in sublist]
 
-        def log_error(msg):
+        has_changes = bool(directly or indirectly)
+
+        if has_changes:
+            msg = (
+                f"Breaking changes detected in plan {getattr(plan, 'plan_id', None)}! "
+                f"Directly modified models: {directly} | Indirectly modified models: {indirectly}"
+            )
             if context and hasattr(context, "log"):
                 context.log.error(msg)
             else:
                 self.logger.error(msg)
-        def log_info(msg):
-            if context and hasattr(context, "log"):
-                context.log.info(msg)
-            else:
-                self.logger.info(msg)
-
-        if breaking_models:
-            log_error(f"Breaking changes detected in plan {getattr(plan, 'plan_id', None)}:")
-            for snapshot, category in breaking_models:
-                model_name = getattr(snapshot, "name", str(snapshot))
-                desc = descriptions.get(snapshot, "No description available.")
-                log_error(f"- {model_name} ({category}): {desc}")
-            return True
         else:
-            log_info(f"No breaking changes detected in plan {getattr(plan, 'plan_id', None)}.")
-            return False
+            info_msg = f"No breaking changes detected in plan {getattr(plan, 'plan_id', None)}."
+            if context and hasattr(context, "log"):
+                context.log.info(info_msg)
+            else:
+                self.logger.info(info_msg)
+
+        return has_changes
