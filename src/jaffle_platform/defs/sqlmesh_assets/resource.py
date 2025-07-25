@@ -97,7 +97,6 @@ class SQLMeshResource(ConfigurableResource):
         """
         model_names = [m.name for m in models]
         plan = self.context.plan(environment=self.target, select_models=model_names, auto_apply=True)
-        self.context.apply(plan)
         return plan
 
     def materialize_all_assets(self, context):
