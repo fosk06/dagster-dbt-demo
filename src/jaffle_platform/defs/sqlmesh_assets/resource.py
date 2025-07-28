@@ -13,6 +13,8 @@ from .sqlmesh_asset_utils import (
     has_breaking_changes,
 )
 from typing import Any, Optional
+import threading
+import anyio
 
 class SQLMeshResource(ConfigurableResource):
     project_dir: str
@@ -29,6 +31,28 @@ class SQLMeshResource(ConfigurableResource):
         description="Allow materialization even if breaking changes are detected (default: True). Set to False to abort materialization."
     )
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._context_cache = None
+        self._models_cache = None
+        self._translator_cache = None
+        self._instance_id = id(self)
+        
+        # Singleton strict control - using class variables outside of Pydantic fields
+        if not hasattr(SQLMeshResource, '_instance_lock'):
+            SQLMeshResource._instance_lock = threading.Lock()
+            SQLMeshResource._active_instances = set()
+        
+        with self._instance_lock:
+            if self._instance_id in self._active_instances:
+                raise Exception("Only one SQLMesh instance allowed at a time")
+            self._active_instances.add(self._instance_id)
+
+    def __del__(self):
+        if hasattr(self, '_instance_id'):
+            with self._instance_lock:
+                self._active_instances.discard(self._instance_id)
+
     @property
     def config(self) -> SQLMeshContextConfig:
         return SQLMeshContextConfig(
@@ -41,26 +65,50 @@ class SQLMeshResource(ConfigurableResource):
     def translator(self):
         """
         Returns a SQLMeshTranslator instance for mapping AssetKeys and models.
-        Stateless, so always returns a new instance.
+        Cached for performance.
         """
-        return SQLMeshTranslator()
+        if self._translator_cache is None:
+            self._translator_cache = SQLMeshTranslator()
+        return self._translator_cache
 
     @property
     def context(self) -> Context:
-        # Utilise la config pour initialiser le contexte SQLMesh, supporte gateway et config_override
-        context_kwargs = {"paths": self.config.project_dir}
-        if self.config.gateway:
-            context_kwargs["gateway"] = self.config.gateway
-        if self.config.sqlmesh_config:
-            context_kwargs["config"] = self.config.sqlmesh_config
-        return Context(**context_kwargs)
+        """
+        Returns the SQLMesh context, cached for performance.
+        Creates the context only once per resource instance.
+        """
+        if self._context_cache is None:
+            # Utilise la config pour initialiser le contexte SQLMesh, supporte gateway et config_override
+            context_kwargs = {"paths": self.config.project_dir}
+            if self.config.gateway:
+                context_kwargs["gateway"] = self.config.gateway
+            if self.config.sqlmesh_config:
+                context_kwargs["config"] = self.config.sqlmesh_config
+            self._context_cache = Context(**context_kwargs)
+        return self._context_cache
     
     @property
     def logger(self):
         return get_dagster_logger()
 
     def get_models(self):
-        return self.context.models.values()
+        """
+        Returns cached models for performance.
+        """
+        if self._models_cache is None:
+            self._models_cache = list(self.context.models.values())
+        return self._models_cache
+
+    def clear_caches(self):
+        """
+        Clear all caches to force re-initialization.
+        Useful for testing or when context needs to be refreshed.
+        """
+        self._context_cache = None
+        self._models_cache = None
+        self._translator_cache = None
+        if self.context:
+            return self.context.clear_caches()
 
     def get_model(self, name, **kwargs):
         return self.context.get_model(name, **kwargs)
@@ -113,9 +161,6 @@ class SQLMeshResource(ConfigurableResource):
     def fetchdf(self, query, **kwargs):
         return self.context.fetchdf(query, **kwargs)
 
-    def clear_caches(self):
-        return self.context.clear_caches()
-
     def materialize_assets(self, models, context=None):
         """
         Materialize the given list of SQLMesh models using plan + apply.
@@ -147,6 +192,36 @@ class SQLMeshResource(ConfigurableResource):
             )
         return plan
 
+    async def materialize_assets_async(self, models, context=None):
+        """
+        Materialize assets in a separate thread using anyio to avoid blocking Dagster.
+        This is the key performance improvement.
+        """
+        def run_materialization():
+            try:
+                return self.materialize_assets(models, context)
+            except Exception as e:
+                self.logger.error(f"Materialization failed: {e}")
+                raise
+        
+        # Run in thread pool using anyio
+        return await anyio.to_thread.run_sync(run_materialization)
+
+    def materialize_assets_threaded(self, models, context=None):
+        """
+        Materialize assets in a separate thread using anyio, but return synchronously.
+        This is the key performance improvement for Dagster assets.
+        """
+        def run_materialization():
+            try:
+                return self.materialize_assets(models, context)
+            except Exception as e:
+                self.logger.error(f"Materialization failed: {e}")
+                raise
+        
+        # Run in thread pool using anyio and wait for completion
+        return anyio.run(anyio.to_thread.run_sync, run_materialization)
+
     def materialize_all_assets(self, context):
         """
         Materialize all selected SQLMesh assets for Dagster in a single, centralized method.
@@ -159,7 +234,10 @@ class SQLMeshResource(ConfigurableResource):
             self.get_models,
             self.translator,
         )
-        plan = self.materialize_assets(models_to_materialize, context=context)
+        
+        # Use threaded materialization for better performance
+        plan = self.materialize_assets_threaded(models_to_materialize, context=context)
+        
         plan_metadata = extract_plan_metadata(plan)
         assetkey_to_snapshot = get_assetkey_to_snapshot(self.context, self.translator)
         ordered_asset_keys = get_topologically_sorted_asset_keys(

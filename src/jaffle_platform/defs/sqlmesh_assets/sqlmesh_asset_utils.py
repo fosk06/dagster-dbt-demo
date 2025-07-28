@@ -100,3 +100,45 @@ def has_breaking_changes(plan, logger, context=None) -> bool:
             logger.info(info_msg)
 
     return has_changes 
+
+
+def get_asset_kinds(translator, context) -> set:
+    """
+    Returns a set of kinds for Dagster AssetSpec, e.g. {"sqlmesh", "postgres"}.
+    """
+    kinds = {"sqlmesh"}
+    dialect = translator._get_context_dialect(context)
+    if dialect:
+        kinds.add(dialect.lower())
+    # Ajoute ici d'autres kinds si besoin (ex: "bigquery", "snowflake", etc.)
+    return kinds 
+
+
+def get_asset_group_name(translator, context, model) -> str:
+    """
+    Returns the group name for a given asset, using the translator logic.
+    """
+    return translator.get_group_name(context, model)
+
+
+def get_asset_tags(translator, context, model) -> dict:
+    """
+    Returns a dict of tags for a given asset, using the translator logic.
+    """
+    return translator.get_tags(context, model)
+
+
+def get_asset_metadata(translator, model, code_version, extra_keys=None, owners=None) -> dict:
+    """
+    Returns the metadata dict for an asset, including owners if provided.
+    """
+    extra_keys = extra_keys or []
+    metadata = {
+        "dagster/table_schema": translator.get_table_metadata(model).column_schema,
+        "dagster/table_name": translator.get_table_metadata(model).table_name,
+        "sqlmesh_snapshot_version": code_version,
+        **translator.serialize_metadata(model, extra_keys),
+    }
+    if owners:
+        metadata["owners"] = owners
+    return metadata 
