@@ -67,7 +67,10 @@ def sqlmesh_assets_factory(
     for model in models:
         asset_key = translator.get_asset_key(model)
         snapshot = assetkey_to_snapshot.get(asset_key)
-        code_version = str(getattr(snapshot, "version", None)) if snapshot else None
+        
+        # code_version = version du code SQLMesh (hash du modèle ou version du modèle)
+        code_version = str(getattr(model, "data_hash", "")) if hasattr(model, "data_hash") and getattr(model, "data_hash") else None
+        
         metadata = get_asset_metadata(translator, model, code_version, extra_keys, owners)
         tags = get_asset_tags(translator, context, model)
 
@@ -78,7 +81,7 @@ def sqlmesh_assets_factory(
             dg.AssetSpec(
                 key=asset_key,
                 deps=deps,  # Now includes both internal and external dependencies
-                code_version=code_version,
+                code_version=code_version,  # Hash du code SQL
                 metadata=metadata,
                 kinds=kinds,
                 tags=tags,

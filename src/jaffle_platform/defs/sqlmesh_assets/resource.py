@@ -3,7 +3,7 @@ import anyio
 import logging
 from typing import Any, Optional
 import dagster as dg
-from dagster import ConfigurableResource, Field, RetryPolicy, AssetKey,AssetMaterialization, Output, DataVersion
+from dagster import ConfigurableResource, Field, RetryPolicy, AssetKey, MaterializeResult, DataVersion
 from sqlmesh import Context
 from .translator import SQLMeshTranslator
 from .sqlmesh_asset_utils import (
@@ -152,13 +152,14 @@ class SQLMeshResource(ConfigurableResource):
 
         for asset_key in ordered_asset_keys:
             snapshot = assetkey_to_snapshot.get(asset_key)
-            yield AssetMaterialization(
+            snapshot_version = getattr(snapshot, "version", None)
+            
+            yield MaterializeResult(
                 asset_key=asset_key,
-                metadata={"sqlmesh_snapshot_version": getattr(snapshot, "version", None)},
-            )
-            yield Output(
-                value=None,
-                output_name=asset_key.to_python_identifier(),
-                data_version=DataVersion(str(getattr(snapshot, "version", ""))) if snapshot else None,
-                metadata={"sqlmesh_snapshot_version": getattr(snapshot, "version", None)}
+                metadata={
+                    "sqlmesh_snapshot_version": snapshot_version,
+                    "materialization_timestamp": str(getattr(snapshot, "created_ts", None)) if snapshot else None,
+                    "sqlmesh_model_name": asset_key.path[-1] if asset_key.path else None,
+                },
+                data_version=DataVersion(str(snapshot_version)) if snapshot_version else None,
             )
