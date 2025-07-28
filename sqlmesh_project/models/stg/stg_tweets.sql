@@ -6,7 +6,7 @@ MODEL (
 );
 
 with source as (
-    select * from sqlmesh_jaffle_platform.raw_tweets
+    select * from sqlmesh_jaffle_platform.raw_source_tweets
 )
 
 select

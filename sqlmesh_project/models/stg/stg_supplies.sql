@@ -7,7 +7,7 @@ MODEL (
 
 with source as (
 
-    select * from sqlmesh_jaffle_platform.raw_supplies
+    select * from sqlmesh_jaffle_platform.raw_source_supplies
 
 ),
 

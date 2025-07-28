@@ -11,9 +11,9 @@ attributes:
         password: jaffle
         database: jaffle_db
   replications:
-    - path: replication.yaml
+    - path: sqlmesh_sources_replication.yaml
 post_processing:
   assets:
     - target: "*"
       attributes:
-        group_name: "sqlmesh"
+        group_name: "landing"
