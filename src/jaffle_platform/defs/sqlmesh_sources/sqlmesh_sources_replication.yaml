@@ -6,17 +6,17 @@ defaults:
   object: "{stream_table}"
 
 streams:
-  file://./jaffle-data/raw_customers.csv:
+  file://./jaffle-data/raw_source_customers.csv:
     object: "main.raw_source_customers"
-  file://./jaffle-data/raw_orders.csv:
+  file://./jaffle-data/raw_source_orders.csv:
     object: "main.raw_source_orders"
-  file://./jaffle-data/raw_products.csv:
+  file://./jaffle-data/raw_source_products.csv:
     object: "main.raw_source_products"
-  file://./jaffle-data/raw_stores.csv:
+  file://./jaffle-data/raw_source_stores.csv:
     object: "main.raw_source_stores"
-  file://./jaffle-data/raw_supplies.csv:
+  file://./jaffle-data/raw_source_supplies.csv:
     object: "main.raw_source_supplies"
-  file://./jaffle-data/raw_items.csv:
+  file://./jaffle-data/raw_source_items.csv:
     object: "main.raw_source_items"
-  file://./jaffle-data/raw_tweets.parquet:
+  file://./jaffle-data/raw_source_tweets.parquet:
     object: "main.raw_source_tweets"

@@ -11,6 +11,7 @@ from .sqlmesh_asset_utils import (
     get_all_external_asset_keys,
 )
 from typing import Any, Optional
+from sqlmesh.core.model.definition import ExternalModel
 
 def sqlmesh_assets_factory(
     *,
@@ -40,7 +41,11 @@ def sqlmesh_assets_factory(
     translator = translator or sqlmesh_resource.translator
 
     # Pre-calculate expensive operations once
-    models = list(sqlmesh_resource.get_models())
+    all_models = list(sqlmesh_resource.get_models())
+    
+    # Filtrer les external models
+    models = [model for model in all_models if not isinstance(model, ExternalModel)]
+    
     context = sqlmesh_resource.context
     assetkey_to_snapshot = get_assetkey_to_snapshot(context, translator)
     extra_keys = ["cron", "tags", "kind", "dialect", "query", "partitioned_by", "clustered_by"]

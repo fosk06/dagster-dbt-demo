@@ -1,5 +1,10 @@
 # Utility functions for SQLMeshResource and Dagster integration
 
+import dagster as dg
+from sqlmesh.core.model.definition import ExternalModel
+from typing import List, Dict, Any, Optional
+
+
 def extract_metadata(obj, fields: list[str], prefix: str = "sqlmesh_") -> dict:
     """
     Extract and format the specified fields from a SQLMesh object (plan, model, etc.)
@@ -20,19 +25,32 @@ def extract_plan_metadata(plan) -> dict:
     return extract_metadata(plan, fields, prefix="sqlmesh_plan_")
 
 
-def get_models_to_materialize(selected_asset_keys, get_models, translator) -> list:
+def get_models_to_materialize(selected_asset_keys, get_models_func, translator):
     """
-    Returns the list of SQLMesh models corresponding to the selected AssetKeys.
-    get_models: callable returning all models
-    translator: SQLMeshTranslator instance
+    Retourne les modèles SQLMesh à matérialiser, en excluant les external models.
     """
-    models = list(get_models())
-    assetkey_to_model = translator.get_assetkey_to_model(models)
-    return [
-        assetkey_to_model[asset_key]
-        for asset_key in selected_asset_keys
-        if asset_key in assetkey_to_model
-    ]
+    all_models = get_models_func()
+    
+    # Filtrer les external models
+    internal_models = []
+    for model in all_models:
+        # Vérifier si c'est un ExternalModel
+        if not isinstance(model, ExternalModel):
+            internal_models.append(model)
+    
+    # Si des assets spécifiques sont sélectionnés, filtrer par AssetKey
+    if selected_asset_keys:
+        assetkey_to_model = translator.get_assetkey_to_model(internal_models)
+        models_to_materialize = []
+        
+        for asset_key in selected_asset_keys:
+            if asset_key in assetkey_to_model:
+                models_to_materialize.append(assetkey_to_model[asset_key])
+        
+        return models_to_materialize
+    
+    # Sinon, retourner tous les modèles internes
+    return internal_models
 
 
 def get_assetkey_to_snapshot(context, translator) -> dict:
@@ -102,45 +120,50 @@ def has_breaking_changes(plan, logger, context=None) -> bool:
     return has_changes 
 
 
-def get_asset_kinds(translator, context) -> set:
+def get_asset_kinds(translator, context) -> dict:
     """
-    Returns a set of kinds for Dagster AssetSpec, e.g. {"sqlmesh", "postgres"}.
+    Retourne les kinds des assets.
     """
-    kinds = {"sqlmesh"}
-    dialect = translator._get_context_dialect(context)
-    if dialect:
-        kinds.add(dialect.lower())
-    # Ajoute ici d'autres kinds si besoin (ex: "bigquery", "snowflake", etc.)
-    return kinds 
+    return {"sqlmesh": "sqlmesh"}
 
 
 def get_asset_group_name(translator, context, model) -> str:
     """
-    Returns the group name for a given asset, using the translator logic.
+    Retourne le group_name pour un asset.
     """
     return translator.get_group_name(context, model)
 
 
 def get_asset_tags(translator, context, model) -> dict:
     """
-    Returns a dict of tags for a given asset, using the translator logic.
+    Retourne les tags pour un asset.
     """
     return translator.get_tags(context, model)
 
 
-def get_asset_metadata(translator, model, code_version, extra_keys=None, owners=None) -> dict:
+def get_asset_metadata(translator, model, code_version, extra_keys, owners) -> dict:
     """
-    Returns the metadata dict for an asset, including owners if provided.
+    Retourne les métadonnées pour un asset.
     """
-    extra_keys = extra_keys or []
-    metadata = {
-        "dagster/table_schema": translator.get_table_metadata(model).column_schema,
-        "dagster/table_name": translator.get_table_metadata(model).table_name,
-        "sqlmesh_snapshot_version": code_version,
-        **translator.serialize_metadata(model, extra_keys),
-    }
+    metadata = {}
+    
+    # Métadonnées de base
+    if code_version:
+        metadata["code_version"] = code_version
+    
+    # Métadonnées de table
+    table_metadata = translator.get_table_metadata(model)
+    metadata.update(table_metadata)
+    
+    # Métadonnées supplémentaires
+    if extra_keys:
+        serialized_metadata = translator.serialize_metadata(model, extra_keys)
+        metadata.update(serialized_metadata)
+    
+    # Propriétaires
     if owners:
         metadata["owners"] = owners
+    
     return metadata
 
 
@@ -148,54 +171,70 @@ def get_asset_metadata(translator, model, code_version, extra_keys=None, owners=
 
 def get_external_dependencies_for_models(context, translator, models) -> dict:
     """
-    Returns a mapping of model FQN to list of external dependencies.
+    Retourne un mapping de model FQN vers liste d'external dependencies.
     context: SQLMesh Context
     translator: SQLMeshTranslator instance
-    models: list of SQLMesh models
+    models: list de SQLMesh models
     """
     external_deps = {}
     for model in models:
+        # Ignorer les external models
+        if isinstance(model, ExternalModel):
+            continue
+            
         external_deps[model.fqn] = translator.get_external_dependencies(context, model)
     return external_deps
 
 
 def get_internal_dependencies_for_models(context, translator, models) -> dict:
     """
-    Returns a mapping of model FQN to list of internal dependencies.
+    Retourne un mapping de model FQN vers liste d'internal dependencies.
     context: SQLMesh Context
     translator: SQLMeshTranslator instance
-    models: list of SQLMesh models
+    models: list de SQLMesh models
     """
     internal_deps = {}
     for model in models:
+        # Ignorer les external models
+        if isinstance(model, ExternalModel):
+            continue
+            
         internal_deps[model.fqn] = translator.get_internal_dependencies(context, model)
     return internal_deps
 
 
 def validate_external_dependencies(context, translator, models) -> list:
     """
-    Validates that all external dependencies can be properly mapped.
-    Returns a list of validation errors.
+    Valide que tous les external dependencies peuvent être proprement mappés.
+    Retourne une liste d'erreurs de validation.
     """
     errors = []
     for model in models:
+        # Ignorer les external models dans la validation
+        if isinstance(model, ExternalModel):
+            continue
+            
         external_deps = translator.get_external_dependencies(context, model)
         for dep_str in external_deps:
             try:
-                translator.map_external_dependency_to_asset_key(dep_str)
+                translator.get_external_asset_key(dep_str)
             except Exception as e:
-                errors.append(f"Failed to map external dependency '{dep_str}' for model '{model.fqn}': {e}")
+                errors.append(f"Failed to map external dependency '{dep_str}' for model '{model.name}': {e}")
     return errors
 
 
 def get_all_external_asset_keys(context, translator, models) -> set:
     """
-    Returns all external asset keys that are referenced by the given models.
+    Retourne tous les external asset keys qui sont référencés par les modèles donnés.
     """
     external_keys = set()
     for model in models:
+        # Ignorer les external models
+        if isinstance(model, ExternalModel):
+            continue
+            
         external_deps = translator.get_external_dependencies(context, model)
         for dep_str in external_deps:
-            asset_key = translator.map_external_dependency_to_asset_key(dep_str)
+            asset_key = translator.get_external_asset_key(dep_str)
             external_keys.add(asset_key)
     return external_keys 

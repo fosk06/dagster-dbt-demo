@@ -16,4 +16,4 @@ post_processing:
   assets:
     - target: "*"
       attributes:
-        group_name: "landing"
+        group_name: "landing_sqlmesh"

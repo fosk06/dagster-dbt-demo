@@ -1,20 +1,18 @@
-from dagster import ConfigurableResource, get_dagster_logger
-from pydantic import Field
-from sqlmesh.core.context import Context
-import dagster as dg
-from .translator import SQLMeshTranslator
-from .config import SQLMeshContextConfig
-from .sqlmesh_asset_utils import (
-    extract_metadata,
-    extract_plan_metadata,
-    get_models_to_materialize,
-    get_assetkey_to_snapshot,
-    get_topologically_sorted_asset_keys,
-    has_breaking_changes,
-)
-from typing import Any, Optional, Callable
 import threading
 import anyio
+import logging
+from typing import Any, Optional
+import dagster as dg
+from dagster import ConfigurableResource, Field, RetryPolicy, AssetKey,AssetMaterialization, Output, DataVersion
+from sqlmesh import Context
+from .translator import SQLMeshTranslator
+from .sqlmesh_asset_utils import (
+    get_models_to_materialize,
+    extract_plan_metadata,
+    get_assetkey_to_snapshot,
+    get_topologically_sorted_asset_keys,
+)
+
 
 class SQLMeshResource(ConfigurableResource):
     """
@@ -32,9 +30,6 @@ class SQLMeshResource(ConfigurableResource):
         translator = kwargs.pop('translator', None)
         
         super().__init__(**kwargs)
-        self._context_cache = None
-        self._models_cache = None
-        self._translator_cache = None
         self._translator_instance = translator  # Stocke le translator fourni
         self._instance_id = id(self)
 
@@ -54,11 +49,16 @@ class SQLMeshResource(ConfigurableResource):
                 self._active_instances.discard(self._instance_id)
 
     @property
+    def logger(self):
+        """Retourne le logger pour cette resource."""
+        return logging.getLogger(__name__)
+
+    @property
     def context(self) -> Context:
         """
         Retourne le contexte SQLMesh. Cached pour les performances.
         """
-        if self._context_cache is None:
+        if not hasattr(self, '_context_cache'):
             self._context_cache = Context(
                 paths=self.project_dir,
                 gateway=self.gateway,
@@ -71,7 +71,7 @@ class SQLMeshResource(ConfigurableResource):
         Retourne une instance SQLMeshTranslator pour mapper AssetKeys et modèles.
         Cached pour les performances.
         """
-        if self._translator_cache is None:
+        if not hasattr(self, '_translator_cache'):
             # Utilise le translator fourni en paramètre ou crée un nouveau
             self._translator_cache = getattr(self, '_translator_instance', None) or SQLMeshTranslator()
         return self._translator_cache
@@ -80,7 +80,7 @@ class SQLMeshResource(ConfigurableResource):
         """
         Retourne tous les modèles SQLMesh. Cached pour les performances.
         """
-        if self._models_cache is None:
+        if not hasattr(self, '_models_cache'):
             self._models_cache = list(self.context.models.values())
         return self._models_cache
 
@@ -88,9 +88,11 @@ class SQLMeshResource(ConfigurableResource):
         """
         Matérialise les assets SQLMesh spécifiés.
         """
+        # Extraire les noms des modèles
+        model_names = [model.name for model in models]
+        
         plan = self.context.plan(
-            models=models,
-            allow_breaking_changes=self.allow_breaking_changes,
+            select_models=model_names,
         )
         
         if plan.requires_backfill:
@@ -150,13 +152,13 @@ class SQLMeshResource(ConfigurableResource):
 
         for asset_key in ordered_asset_keys:
             snapshot = assetkey_to_snapshot.get(asset_key)
-            yield dg.AssetMaterialization(
+            yield AssetMaterialization(
                 asset_key=asset_key,
                 metadata={"sqlmesh_snapshot_version": getattr(snapshot, "version", None)},
             )
-            yield dg.Output(
+            yield Output(
                 value=None,
                 output_name=asset_key.to_python_identifier(),
-                data_version=dg.DataVersion(str(getattr(snapshot, "version", ""))) if snapshot else None,
+                data_version=DataVersion(str(getattr(snapshot, "version", ""))) if snapshot else None,
                 metadata={"sqlmesh_snapshot_version": getattr(snapshot, "version", None)}
             )

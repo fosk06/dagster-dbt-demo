@@ -64,14 +64,14 @@ def truncate_tables(schema, tables):
     dlt_source=local_csv_source(),
     dlt_pipeline=dlt_pg_pipeline,
     dagster_dlt_translator=DltToDbtTranslator(),
-    group_name="landing",
+    group_name="landing_dbt",
 )
 def dagster_dlt_landings_assets(context: AssetExecutionContext, dlt: DagsterDltResource):
     truncate_tables("main", ["raw_customers"])
     yield from dlt.run(context=context)
 
 dlt_source_assets = [
-    AssetSpec(key, group_name="landing") for key in dagster_dlt_landings_assets.dependency_keys
+    AssetSpec(key, group_name="landing_dbt") for key in dagster_dlt_landings_assets.dependency_keys
 ]
 
 defs = Definitions(
