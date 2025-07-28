@@ -1,16 +1,19 @@
-from dagster import Definitions, RetryPolicy
+from dagster import Definitions, RetryPolicy, AssetKey
 from .decorators import sqlmesh_assets_factory
 from .resource import SQLMeshResource
 from .translator import SQLMeshTranslator, CustomSQLMeshTranslator
 
 class SlingToSqlmeshTranslator(SQLMeshTranslator):
-    def get_external_asset_key(self, external_fqn: str) -> dg.AssetKey:
+    def get_external_asset_key(self, external_fqn: str) -> AssetKey:
         """
         Mapping custom pour les external assets.
-        Exemple: 'jaffle_db.main.raw_source_customers' → ['target', 'main', 'raw_source_customers']
+        SQLMesh: 'jaffle_db.main.raw_source_customers' → Sling: ['target', 'main', 'raw_source_customers']
         """
         parts = external_fqn.replace('"', '').split('.')
-        return dg.AssetKey(['target'] + parts[1:])
+        if len(parts) >= 3:
+            catalog, schema, table = parts[0], parts[1], parts[2]
+            return AssetKey(['target', 'main', table])
+        return AssetKey(['external'] + parts[1:])
 
 # Configuration du resource SQLMesh avec translator custom
 sqlmesh_resource = SQLMeshResource(

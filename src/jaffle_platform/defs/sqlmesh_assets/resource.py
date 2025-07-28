@@ -26,13 +26,16 @@ class SQLMeshResource(ConfigurableResource):
     gateway: str = "postgres"
     config_override: Optional[dict] = None
     allow_breaking_changes: bool = False
-    translator: Optional[SQLMeshTranslator] = None
 
     def __init__(self, **kwargs):
+        # Extraire le translator avant d'appeler super().__init__
+        translator = kwargs.pop('translator', None)
+        
         super().__init__(**kwargs)
         self._context_cache = None
         self._models_cache = None
         self._translator_cache = None
+        self._translator_instance = translator  # Stocke le translator fourni
         self._instance_id = id(self)
 
         # Singleton strict control - using class variables outside of Pydantic fields
@@ -59,7 +62,6 @@ class SQLMeshResource(ConfigurableResource):
             self._context_cache = Context(
                 paths=self.project_dir,
                 gateway=self.gateway,
-                config_override=self.config_override,
             )
         return self._context_cache
 
@@ -70,7 +72,8 @@ class SQLMeshResource(ConfigurableResource):
         Cached pour les performances.
         """
         if self._translator_cache is None:
-            self._translator_cache = self.translator or SQLMeshTranslator()
+            # Utilise le translator fourni en paramètre ou crée un nouveau
+            self._translator_cache = getattr(self, '_translator_instance', None) or SQLMeshTranslator()
         return self._translator_cache
 
     def get_models(self):

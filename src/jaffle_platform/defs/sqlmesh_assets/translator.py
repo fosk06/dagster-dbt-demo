@@ -4,6 +4,7 @@ import dagster as dg
 from dagster._core.definitions.metadata import TableMetadataSet, TableSchema, TableColumn
 import json
 from typing import Callable, Optional
+from sqlmesh.core.model.definition import ExternalModel
 
 @dataclass
 class SQLMeshTranslator:
@@ -77,7 +78,8 @@ class SQLMeshTranslator:
             # Check if this dependency is an internal SQLMesh model
             dep_model = context.get_model(dep_str)
 
-            if dep_model:
+            # Check if this is an ExternalModel
+            if dep_model and not isinstance(dep_model, ExternalModel):
                 # Internal SQLMesh model
                 deps.append(dep_asset_key)
             else:
