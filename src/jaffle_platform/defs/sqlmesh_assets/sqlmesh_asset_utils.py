@@ -141,4 +141,61 @@ def get_asset_metadata(translator, model, code_version, extra_keys=None, owners=
     }
     if owners:
         metadata["owners"] = owners
-    return metadata 
+    return metadata
+
+
+# --- Nouvelles fonctions pour gérer les external assets ---
+
+def get_external_dependencies_for_models(context, translator, models) -> dict:
+    """
+    Returns a mapping of model FQN to list of external dependencies.
+    context: SQLMesh Context
+    translator: SQLMeshTranslator instance
+    models: list of SQLMesh models
+    """
+    external_deps = {}
+    for model in models:
+        external_deps[model.fqn] = translator.get_external_dependencies(context, model)
+    return external_deps
+
+
+def get_internal_dependencies_for_models(context, translator, models) -> dict:
+    """
+    Returns a mapping of model FQN to list of internal dependencies.
+    context: SQLMesh Context
+    translator: SQLMeshTranslator instance
+    models: list of SQLMesh models
+    """
+    internal_deps = {}
+    for model in models:
+        internal_deps[model.fqn] = translator.get_internal_dependencies(context, model)
+    return internal_deps
+
+
+def validate_external_dependencies(context, translator, models) -> list:
+    """
+    Validates that all external dependencies can be properly mapped.
+    Returns a list of validation errors.
+    """
+    errors = []
+    for model in models:
+        external_deps = translator.get_external_dependencies(context, model)
+        for dep_str in external_deps:
+            try:
+                translator.map_external_dependency_to_asset_key(dep_str)
+            except Exception as e:
+                errors.append(f"Failed to map external dependency '{dep_str}' for model '{model.fqn}': {e}")
+    return errors
+
+
+def get_all_external_asset_keys(context, translator, models) -> set:
+    """
+    Returns all external asset keys that are referenced by the given models.
+    """
+    external_keys = set()
+    for model in models:
+        external_deps = translator.get_external_dependencies(context, model)
+        for dep_str in external_deps:
+            asset_key = translator.map_external_dependency_to_asset_key(dep_str)
+            external_keys.add(asset_key)
+    return external_keys 

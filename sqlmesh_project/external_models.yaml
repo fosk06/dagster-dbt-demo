@@ -1,1 +1,58 @@
-[]
+- name: '"jaffle_db"."main"."raw_source_customers"'
+  columns:
+    id: TEXT
+    name: TEXT
+    _sling_loaded_at: INT
+  gateway: postgres
+- name: '"jaffle_db"."main"."raw_source_items"'
+  columns:
+    id: TEXT
+    order_id: TEXT
+    sku: TEXT
+    _sling_loaded_at: INT
+  gateway: postgres
+- name: '"jaffle_db"."main"."raw_source_orders"'
+  columns:
+    id: TEXT
+    customer: TEXT
+    ordered_at: TIMESTAMP
+    store_id: TEXT
+    subtotal: INT
+    tax_paid: INT
+    order_total: INT
+    _sling_loaded_at: INT
+  gateway: postgres
+- name: '"jaffle_db"."main"."raw_source_products"'
+  columns:
+    sku: TEXT
+    name: TEXT
+    type: TEXT
+    price: INT
+    description: TEXT
+    _sling_loaded_at: INT
+  gateway: postgres
+- name: '"jaffle_db"."main"."raw_source_stores"'
+  columns:
+    id: TEXT
+    name: TEXT
+    opened_at: DATE
+    tax_rate: DECIMAL
+    _sling_loaded_at: INT
+  gateway: postgres
+- name: '"jaffle_db"."main"."raw_source_supplies"'
+  columns:
+    id: TEXT
+    name: TEXT
+    cost: INT
+    perishable: BOOLEAN
+    sku: TEXT
+    _sling_loaded_at: INT
+  gateway: postgres
+- name: '"jaffle_db"."main"."raw_source_tweets"'
+  columns:
+    id: TEXT
+    user_id: TEXT
+    tweeted_at: TIMESTAMP
+    content: TEXT
+    _sling_loaded_at: INT
+  gateway: postgres

@@ -7,16 +7,16 @@ defaults:
 
 streams:
   file://./jaffle-data/raw_customers.csv:
-    object: "sqlmesh__sqlmesh_jaffle_platform.raw_source_customers"
+    object: "main.raw_source_customers"
   file://./jaffle-data/raw_orders.csv:
-    object: "sqlmesh__sqlmesh_jaffle_platform.raw_source_orders"
+    object: "main.raw_source_orders"
   file://./jaffle-data/raw_products.csv:
-    object: "sqlmesh__sqlmesh_jaffle_platform.raw_source_products"
+    object: "main.raw_source_products"
   file://./jaffle-data/raw_stores.csv:
-    object: "sqlmesh__sqlmesh_jaffle_platform.raw_source_stores"
+    object: "main.raw_source_stores"
   file://./jaffle-data/raw_supplies.csv:
-    object: "sqlmesh__sqlmesh_jaffle_platform.raw_source_supplies"
+    object: "main.raw_source_supplies"
   file://./jaffle-data/raw_items.csv:
-    object: "sqlmesh__sqlmesh_jaffle_platform.raw_source_items"
+    object: "main.raw_source_items"
   file://./jaffle-data/raw_tweets.parquet:
-    object: "sqlmesh__sqlmesh_jaffle_platform.raw_source_tweets"
+    object: "main.raw_source_tweets"
