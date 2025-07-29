@@ -1,4 +1,12 @@
 import dagster as dg
+from dagster import (
+    DailyPartitionsDefinition,
+    MonthlyPartitionsDefinition,
+    WeeklyPartitionsDefinition,
+    StaticPartitionsDefinition,
+    TimeWindowPartitionsDefinition
+)
+from datetime import datetime
 from .translator import SQLMeshTranslator
 from .resource import SQLMeshResource
 from .sqlmesh_asset_utils import (
@@ -9,9 +17,66 @@ from .sqlmesh_asset_utils import (
     get_asset_metadata,
     validate_external_dependencies,
     get_all_external_asset_keys,
+    get_model_partitions,
 )
 from typing import Any, Optional
 from sqlmesh.core.model.definition import ExternalModel
+
+
+def create_partitions_def(model, context, translator) -> Any:
+    """
+    Crée une définition de partitions Dagster basée sur les partitions SQLMesh.
+    """
+    # Récupérer les informations de partition du modèle
+    asset_key = translator.get_asset_key(model)
+    snapshot = get_assetkey_to_snapshot(context, translator).get(asset_key)
+    
+    if not snapshot:
+        return None
+    
+    partition_info = get_model_partitions(context, translator, asset_key, snapshot)
+    
+    if not partition_info.get("is_partitioned", False):
+        return None
+    
+    partitioned_by = partition_info.get("partitioned_by", [])
+    
+    # Partitions temporelles
+    if "order_date" in partitioned_by or "date" in partitioned_by:
+        return DailyPartitionsDefinition(start_date="2024-01-01")
+    
+    # Partitions mensuelles
+    elif "month" in partitioned_by:
+        return MonthlyPartitionsDefinition(start_date="2024-01-01")
+    
+    # Partitions hebdomadaires
+    elif "week" in partitioned_by:
+        return WeeklyPartitionsDefinition(start_date="2024-01-01")
+    
+    # Partitions statiques
+    elif partitioned_by:
+        return StaticPartitionsDefinition(partitioned_by)
+    
+    # Partitions personnalisées avec TimeWindow
+    else:
+        return TimeWindowPartitionsDefinition(
+            start=datetime(2024, 1, 1),
+            end=datetime(2024, 12, 31),
+            fmt="%Y-%m-%d"
+        )
+    
+    return None
+
+
+def create_unified_partitions_def(models, context, translator) -> Any:
+    """
+    Crée une définition de partitions unifiée pour tous les modèles.
+    Pour l'instant, on désactive les partitions pour éviter les conflits.
+    """
+    # TODO: Implémenter une logique pour unifier les partitions
+    # Par exemple, utiliser la partition la plus commune ou désactiver
+    return None
+
 
 def sqlmesh_assets_factory(
     *,
@@ -76,6 +141,10 @@ def sqlmesh_assets_factory(
 
         # Use the new method that handles external assets
         deps = translator.get_model_deps_with_external(context, model)
+        
+        # Créer la définition de partitions si le modèle est partitionné
+        # Temporairement désactivé pour éviter les conflits de partition
+        partitions_def = None  # translator.get_partitions_def(model)
 
         specs.append(
             dg.AssetSpec(
@@ -86,6 +155,7 @@ def sqlmesh_assets_factory(
                 kinds=kinds,
                 tags=tags,
                 group_name=group_name,  # Use the factory parameter
+                partitions_def=partitions_def,  # Ajouter les partitions si disponibles
             )
         )
 
@@ -95,6 +165,7 @@ def sqlmesh_assets_factory(
         op_tags=op_tags,
         required_resource_keys=required_resource_keys,
         retry_policy=retry_policy,
+        can_subset=True,  # Permettre des partitions différentes entre les assets
     )
     def _sqlmesh_assets(context: dg.AssetExecutionContext, sqlmesh: SQLMeshResource):
         yield from sqlmesh.materialize_all_assets(context)

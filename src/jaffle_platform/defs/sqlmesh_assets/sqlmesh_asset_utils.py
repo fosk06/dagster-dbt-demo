@@ -66,6 +66,30 @@ def get_assetkey_to_snapshot(context, translator) -> dict:
         assetkey_to_snapshot[asset_key] = snapshot
     return assetkey_to_snapshot
 
+def get_model_partitions(context, translator, asset_key, snapshot) -> dict:
+    """Retourne les informations de partition pour un asset."""
+    # Convertir AssetKey vers le modèle SQLMesh
+    model = get_model_from_asset_key(context, translator, asset_key)
+    
+    if model:
+        partitioned_by = getattr(model, "partitioned_by", [])
+        # Extraire les noms des colonnes de partition
+        partition_columns = [col.name for col in partitioned_by] if partitioned_by else []
+        intervals = getattr(snapshot, "intervals", [])
+        grain = getattr(model, "grain", [])
+        is_partitioned = len(partition_columns) > 0
+        return {"partitioned_by": partition_columns, "intervals": intervals, "partition_columns": partition_columns, "grain": grain, "is_partitioned": is_partitioned}
+    
+    return {"partitioned_by": [], "intervals": []}
+
+
+def get_model_from_asset_key(context, translator, asset_key) -> Any:
+    """Convertit un AssetKey Dagster vers le modèle SQLMesh correspondant."""
+    # Utiliser le mapping inverse du translator
+    all_models = list(context.models.values())
+    assetkey_to_model = translator.get_assetkey_to_model(all_models)
+    
+    return assetkey_to_model.get(asset_key)
 
 def get_topologically_sorted_asset_keys(context, translator, selected_asset_keys) -> list:
     """
