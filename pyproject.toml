@@ -17,6 +17,7 @@ dependencies = [
     "sqlalchemy>=2.0.41",
     "sqlmesh[web]>=0.198.0",
     "anyio>=4.9.0",
+    "vulture>=2.14",
 ]
 
 [project.optional-dependencies]

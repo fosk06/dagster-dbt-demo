@@ -15,7 +15,6 @@ from .resource import SQLMeshResource
 from .sqlmesh_asset_utils import (
     get_assetkey_to_snapshot,
     get_asset_kinds,
-    get_asset_group_name,
     get_asset_tags,
     get_asset_metadata,
     validate_external_dependencies,
@@ -149,6 +148,9 @@ def sqlmesh_assets_factory(
         # Temporairement désactivé pour éviter les conflits de partition
         partitions_def = None  # translator.get_partitions_def(model)
 
+        # Déterminer le group_name avec priorité : tag > factory > fallback
+        final_group_name = translator.get_group_name_with_fallback(context, model, group_name)
+        
         specs.append(
             AssetSpec(
                 key=asset_key,
@@ -157,7 +159,7 @@ def sqlmesh_assets_factory(
                 metadata=metadata,
                 kinds=kinds,
                 tags=tags,
-                group_name=group_name,  # Use the factory parameter
+                group_name=final_group_name,  # Priorité : tag > factory > fallback
                 partitions_def=partitions_def,  # Ajouter les partitions si disponibles
             )
         )

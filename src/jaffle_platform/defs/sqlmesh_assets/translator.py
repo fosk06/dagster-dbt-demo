@@ -142,14 +142,61 @@ class SQLMeshTranslator:
         """
         Détermine le group_name pour un modèle.
         Peut être override pour un mapping custom.
+        Priorité : tag > factory > fallback
         """
+        # Vérifier les tags SQLMesh pour les propriétés Dagster
+        dagster_property = self._get_dagster_property_from_tags(model, "group_name")
+        if dagster_property:
+            return dagster_property
+        
+        # Si pas de tag, retourner None pour utiliser la valeur de la factory
+        return None
+
+    def get_group_name_with_fallback(self, context, model, factory_group_name: str) -> str:
+        """
+        Détermine le group_name avec fallback vers la factory.
+        Priorité : tag > factory > fallback par défaut
+        """
+        # Vérifier les tags SQLMesh pour les propriétés Dagster
+        dagster_property = self._get_dagster_property_from_tags(model, "group_name")
+        if dagster_property:
+            return dagster_property
+        
+        # Si pas de tag, utiliser la valeur de la factory
+        if factory_group_name:
+            return factory_group_name
+        
+        # Fallback: logique par défaut
         path = self.get_asset_key_name(getattr(model, "fqn", getattr(model, "view_name", "")))
         return path[-2] if len(path) >= 2 else "default"
+
+    def _get_dagster_property_from_tags(self, model, property_name: str) -> Optional[str]:
+        """
+        Parse les tags SQLMesh pour extraire les propriétés Dagster.
+        Convention: "dagster:property_name:value"
+        """
+        tags = getattr(model, "tags", set())
+        
+        for tag in tags:
+            if tag.startswith("dagster:"):
+                parts = tag.split(":")
+                if len(parts) >= 3 and parts[1] == property_name:
+                    return parts[2]
+        
+        return None
 
     def get_tags(self, context, model) -> dict:
         """Retourne les tags du modèle sous forme de dict."""
         tags = getattr(model, "tags", set())
-        return {k: "true" for k in tags}
+        
+        # Filtrer les tags de configuration Dagster
+        dagster_tags = {}
+        for tag in tags:
+            # Ignorer les tags qui commencent par "dagster:" (configuration interne)
+            if not tag.startswith("dagster:"):
+                dagster_tags[tag] = "true"
+        
+        return dagster_tags
 
     def _get_context_dialect(self, context) -> str:
         """Retourne le dialecte SQL du contexte SQLMesh."""

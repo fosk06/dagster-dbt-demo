@@ -143,11 +143,12 @@ def has_breaking_changes(plan, logger, context=None) -> bool:
     return has_changes 
 
 
-def get_asset_kinds(translator, context) -> dict:
+def get_asset_kinds(translator, context) -> set:
     """
-    Retourne les kinds des assets.
+    Retourne les kinds des assets avec le dialecte SQL.
     """
-    return {"sqlmesh": "sqlmesh"}
+    dialect = translator._get_context_dialect(context)
+    return {"sqlmesh", dialect}
 
 
 def get_asset_group_name(translator, context, model) -> str:

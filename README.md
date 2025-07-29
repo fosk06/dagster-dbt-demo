@@ -344,3 +344,9 @@ dg scaffold defs dagster.asset_check --format=python --asset-key product_sentime
 Additionally, a dataset named `raw_tweets_invalid` is provided. This dataset is identical in structure to `raw_tweets`, but it ingests a Parquet file (`raw_tweets_invalid.parquet`) that does **not** conform to the data contract (e.g., all columns are stored as strings, including `tweeted_at`).
 
 This invalid dataset is included specifically to demonstrate what happens when data contract validation fails: running the materialization on `raw_tweets_invalid` will produce explicit errors, making it easy to test and showcase contract enforcement and error handling in the platform.
+
+### Audit a sqlmesh model
+
+```bash
+uv run sqlmesh -p sqlmesh_project audit --model sqlmesh_jaffle_platform.orders --start 2024-01-01 --end 2025-07-31
+```

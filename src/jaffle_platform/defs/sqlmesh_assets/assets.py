@@ -1,7 +1,7 @@
 from dagster import Definitions, RetryPolicy, AssetKey
 from .decorators import sqlmesh_assets_factory
 from .resource import SQLMeshResource
-from .translator import SQLMeshTranslator, CustomSQLMeshTranslator
+from .translator import SQLMeshTranslator
 
 class SlingToSqlmeshTranslator(SQLMeshTranslator):
     def get_external_asset_key(self, external_fqn: str) -> AssetKey:

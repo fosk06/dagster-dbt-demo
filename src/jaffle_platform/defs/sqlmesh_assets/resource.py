@@ -204,53 +204,8 @@ class SQLMeshResource(ConfigurableResource):
                 "sqlmesh_model_name": asset_key.path[-1] if asset_key.path else None,
             }
             
-            # Gérer les partitions SQLMesh
-            yield from self._materialize_with_partitions(
+            yield MaterializeResult(
                 asset_key=asset_key,
-                snapshot=snapshot,
-                snapshot_version=snapshot_version,
-                metadata=metadata
+                metadata=metadata,
+                data_version=DataVersion(str(snapshot_version)) if snapshot_version else None
             )
-
-    def _materialize_with_partitions(self, asset_key, snapshot, snapshot_version, metadata):
-        """
-        Gère la matérialisation avec ou sans partitions.
-        Temporairement désactivé pour éviter les conflits de partition.
-        """
-        # TODO: Réactiver une fois les partitions unifiées
-        # partition_info = self.translator.get_sqlmesh_partition_info(snapshot) if snapshot else {}
-        
-        # if partition_info.get("partitioned_by") and partition_info.get("cron"):
-        #     # Asset partitionné temporellement
-        #     for interval in partition_info.get("intervals", []):
-        #         yield MaterializeResult(
-        #             asset_key=asset_key,
-        #             partition=interval,  # ex: "2024-01-15" pour @daily
-        #             data_version=DataVersion(str(snapshot_version)) if snapshot_version else None,
-        #             metadata={
-        #                 **metadata,
-        #                 "sqlmesh_snapshot_version": snapshot_version,
-        #                 "partition_interval": interval,
-        #                 "partition_cron": partition_info.get("cron"),
-        #             }
-        #         )
-        # elif partition_info.get("partitioned_by"):
-        #     # Asset partitionné statiquement
-        #     for partition in partition_info.get("partitioned_by", []):
-        #         yield MaterializeResult(
-        #             asset_key=asset_key,
-        #             partition=partition,
-        #             data_version=DataVersion(str(snapshot_version)) if snapshot_version else None,
-        #             metadata={
-        #                 **metadata,
-        #                 "sqlmesh_snapshot_version": snapshot_version,
-        #                 "partition_column": partition,
-        #             }
-        #         )
-        # else:
-        # Asset non partitionné (temporairement tous les assets)
-        yield MaterializeResult(
-            asset_key=asset_key,
-            metadata=metadata,
-            data_version=DataVersion(str(snapshot_version)) if snapshot_version else None,
-        )

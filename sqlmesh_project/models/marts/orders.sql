@@ -3,7 +3,14 @@ MODEL (
   kind FULL,
   cron '@daily',
   grain order_id,
+  tags ["dagster:group_name:sqlmesh_datamarts"],
   partitioned_by = ["order_date"],
+  audits(
+    number_of_rows(threshold := 10),
+    not_null(columns := (order_id, customer_id, store_id, order_date, order_total, status)),
+    unique_values(columns := (order_id))
+  ),
+
   column_descriptions (
     order_id = 'Unique identifier for each order',
     customer_id = 'Identifier linking to the customer who placed the order',

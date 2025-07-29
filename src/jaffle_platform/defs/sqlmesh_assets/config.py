@@ -1,4 +1,3 @@
-from pydantic import Field
 from typing import Any, Optional
 from sqlmesh.core.config import Config as MeshConfig
 
