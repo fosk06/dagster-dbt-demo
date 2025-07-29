@@ -1,10 +1,13 @@
-import dagster as dg
 from dagster import (
     DailyPartitionsDefinition,
     MonthlyPartitionsDefinition,
     WeeklyPartitionsDefinition,
     StaticPartitionsDefinition,
-    TimeWindowPartitionsDefinition
+    TimeWindowPartitionsDefinition,
+    AssetSpec,
+    multi_asset,
+    AssetExecutionContext,
+    RetryPolicy,
 )
 from datetime import datetime
 from .translator import SQLMeshTranslator
@@ -86,7 +89,7 @@ def sqlmesh_assets_factory(
     translator: SQLMeshTranslator = None,
     op_tags: dict = None,
     required_resource_keys: set = None,
-    retry_policy: dg.RetryPolicy = None,
+    retry_policy: RetryPolicy = None,
     owners: list = None,
 ):
     """
@@ -147,7 +150,7 @@ def sqlmesh_assets_factory(
         partitions_def = None  # translator.get_partitions_def(model)
 
         specs.append(
-            dg.AssetSpec(
+            AssetSpec(
                 key=asset_key,
                 deps=deps,  # Now includes both internal and external dependencies
                 code_version=code_version,  # Hash du code SQL
@@ -159,7 +162,7 @@ def sqlmesh_assets_factory(
             )
         )
 
-    @dg.multi_asset(
+    @multi_asset(
         name=name,
         specs=specs,
         op_tags=op_tags,
@@ -167,7 +170,7 @@ def sqlmesh_assets_factory(
         retry_policy=retry_policy,
         can_subset=True,  # Permettre des partitions différentes entre les assets
     )
-    def _sqlmesh_assets(context: dg.AssetExecutionContext, sqlmesh: SQLMeshResource):
+    def _sqlmesh_assets(context: AssetExecutionContext, sqlmesh: SQLMeshResource):
         yield from sqlmesh.materialize_all_assets(context)
 
     return _sqlmesh_assets 

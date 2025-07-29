@@ -1,6 +1,5 @@
 # Utility functions for SQLMeshResource and Dagster integration
 
-import dagster as dg
 from sqlmesh.core.model.definition import ExternalModel
 from typing import List, Dict, Any, Optional
 

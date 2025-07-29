@@ -2,8 +2,15 @@ import threading
 import anyio
 import logging
 from typing import Any, Optional
-import dagster as dg
-from dagster import ConfigurableResource, Field, RetryPolicy, AssetKey, MaterializeResult, DataVersion, PartitionKeyRange
+from dagster import (
+    ConfigurableResource, 
+    Field, 
+    RetryPolicy, 
+    AssetKey, 
+    MaterializeResult, 
+    DataVersion, 
+    PartitionKeyRange
+)
 from datetime import datetime
 from sqlmesh import Context
 from .translator import SQLMeshTranslator

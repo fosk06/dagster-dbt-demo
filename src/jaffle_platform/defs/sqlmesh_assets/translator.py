@@ -1,8 +1,7 @@
 import re
 from dataclasses import dataclass, field
-import dagster as dg
+from dagster import AssetKey, PartitionsDefinition
 from dagster._core.definitions.metadata import TableMetadataSet, TableSchema, TableColumn
-from dagster import PartitionsDefinition
 from dagster import (
     DailyPartitionsDefinition,
     WeeklyPartitionsDefinition, 
@@ -27,7 +26,7 @@ class SQLMeshTranslator:
         segment = segment.replace('"', '').replace("'", "")
         return re.sub(r'[^A-Za-z0-9_]', '_', segment)
 
-    def get_asset_key(self, model) -> dg.AssetKey:
+    def get_asset_key(self, model) -> AssetKey:
         """
         Génère un AssetKey pour un modèle SQLMesh.
         Peut être override pour un mapping custom.
@@ -35,9 +34,9 @@ class SQLMeshTranslator:
         catalog = self.normalize_segment(getattr(model, "catalog", "default"))
         schema = self.normalize_segment(getattr(model, "schema_name", "default"))
         view = self.normalize_segment(getattr(model, "view_name", "unknown"))
-        return dg.AssetKey([catalog, schema, view])
+        return AssetKey([catalog, schema, view])
 
-    def get_external_asset_key(self, external_fqn: str) -> dg.AssetKey:
+    def get_external_asset_key(self, external_fqn: str) -> AssetKey:
         """
         Génère un AssetKey pour un asset externe (source SQLMesh).
         Peut être override pour un mapping custom.
@@ -48,24 +47,24 @@ class SQLMeshTranslator:
             catalog, schema, table = parts
             # Mapping par défaut pour les sources externes
             if catalog == "main" and schema == "external":
-                return dg.AssetKey(["sling", table])
+                return AssetKey(["sling", table])
             elif catalog == "jaffle_db" and schema == "external":
-                return dg.AssetKey(["sling", table])
+                return AssetKey(["sling", table])
             else:
                 # Fallback: use the original structure but with "external" prefix
-                return dg.AssetKey(["external", catalog, schema, table])
+                return AssetKey(["external", catalog, schema, table])
 
         # Fallback for non-quoted strings
         parts = [self.normalize_segment(s) for s in external_fqn.split(".")]
-        return dg.AssetKey(["external"] + parts)
+        return AssetKey(["external"] + parts)
 
-    def get_asset_key_from_dep_str(self, dep_str: str) -> dg.AssetKey:
+    def get_asset_key_from_dep_str(self, dep_str: str) -> AssetKey:
         """Parse une string de dépendance et retourne un AssetKey."""
         parts = [self.normalize_segment(s) for s in re.findall(r'"([^"]+)"', dep_str)]
         if len(parts) == 3:
-            return dg.AssetKey(parts)
+            return AssetKey(parts)
         # Fallback: split sur les points si pas de guillemets
-        return dg.AssetKey([self.normalize_segment(s) for s in dep_str.split(".")])
+        return AssetKey([self.normalize_segment(s) for s in dep_str.split(".")])
 
     def get_deps_from_model(self, model) -> list:
         """Retourne les dépendances d'un modèle (version simple, sans external assets)."""
@@ -242,14 +241,14 @@ class CustomSQLMeshTranslator(SQLMeshTranslator):
     Exemple de translator custom pour montrer comment étendre le mapping.
     """
     
-    def get_external_asset_key(self, external_fqn: str) -> dg.AssetKey:
+    def get_external_asset_key(self, external_fqn: str) -> AssetKey:
         """
         Override pour un mapping custom des external assets.
         Exemple: 'jaffle_db.main.raw_source_customers' → ['target', 'main', 'raw_source_customers']
         """
         parts = external_fqn.replace('"', '').split('.')
         # On ignore le catalog (jaffle_db), on prend le reste
-        return dg.AssetKey(['target'] + parts[1:])
+        return AssetKey(['target'] + parts[1:])
 
     def get_group_name(self, context, model) -> str:
         """
