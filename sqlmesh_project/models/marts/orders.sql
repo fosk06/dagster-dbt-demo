@@ -3,6 +3,25 @@ MODEL (
   kind FULL,
   cron '@daily',
   grain order_id,
+  partitioned_by = ["order_date"],
+  column_descriptions (
+    order_id = 'Unique identifier for each order',
+    customer_id = 'Identifier linking to the customer who placed the order',
+    order_date = 'Date when the order was placed',
+    store_id = 'Identifier of the store where the order was placed',
+    subtotal = 'Order subtotal before tax and discounts',
+    tax_paid = 'Tax amount paid on the order',
+    order_total = 'Total order amount including tax',
+    status = 'Current status of the order (pending, completed, cancelled, etc.)',
+    order_cost = 'Total cost of supplies/ingredients for the order',
+    order_items_subtotal = 'Sum of all product prices in the order',
+    count_food_items = 'Number of food items in the order',
+    count_drink_items = 'Number of drink items in the order',
+    count_order_items = 'Total number of items in the order',
+    is_food_order = 'Boolean indicating if the order contains food items',
+    is_drink_order = 'Boolean indicating if the order contains drink items',
+    customer_order_number = 'Sequential order number for each customer (1st, 2nd, 3rd order, etc.)'
+  )
 );
 
 with orders as (

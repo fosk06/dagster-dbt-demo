@@ -151,9 +151,14 @@ def get_asset_metadata(translator, model, code_version, extra_keys, owners) -> d
     if code_version:
         metadata["code_version"] = code_version
     
-    # Métadonnées de table
+    # Métadonnées de table avec column descriptions
     table_metadata = translator.get_table_metadata(model)
     metadata.update(table_metadata)
+    
+    # Ajouter les column descriptions si disponibles
+    column_descriptions = get_column_descriptions_from_model(model)
+    if column_descriptions:
+        metadata["column_descriptions"] = column_descriptions
     
     # Métadonnées supplémentaires
     if extra_keys:
@@ -165,6 +170,23 @@ def get_asset_metadata(translator, model, code_version, extra_keys, owners) -> d
         metadata["owners"] = owners
     
     return metadata
+
+
+def get_column_descriptions_from_model(model) -> dict:
+    """
+    Extrait les column_descriptions d'un modèle SQLMesh et les formate pour Dagster.
+    """
+    column_descriptions = {}
+    
+    # Essayer d'accéder aux column_descriptions du modèle
+    if hasattr(model, 'column_descriptions') and model.column_descriptions:
+        column_descriptions = model.column_descriptions
+    
+    # Essayer d'accéder via le modèle SQLMesh
+    elif hasattr(model, 'model') and hasattr(model.model, 'column_descriptions'):
+        column_descriptions = model.model.column_descriptions
+    
+    return column_descriptions
 
 
 # --- Nouvelles fonctions pour gérer les external assets ---

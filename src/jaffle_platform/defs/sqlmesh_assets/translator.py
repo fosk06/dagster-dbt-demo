@@ -92,20 +92,26 @@ class SQLMeshTranslator:
     def get_table_metadata(self, model) -> TableMetadataSet:
         """Génère les métadonnées de table pour un modèle."""
         columns_to_types = getattr(model, "columns_to_types", {})
+        
+        # Récupérer les descriptions de colonnes
+        column_descriptions = getattr(model, "column_descriptions", {})
+        
         columns = [
             TableColumn(
                 name=col,
                 type=str(getattr(dtype, "this", dtype)),
-                description=None
+                description=column_descriptions.get(col)  # Utiliser la description si disponible
             )
             for col, dtype in columns_to_types.items()
         ]
+        
         table_schema = TableSchema(columns=columns)
         table_name = ".".join([
             getattr(model, "catalog", "default"),
             getattr(model, "schema_name", "default"),
             getattr(model, "view_name", "unknown"),
         ])
+        
         return TableMetadataSet(
             column_schema=table_schema,
             table_name=table_name,
