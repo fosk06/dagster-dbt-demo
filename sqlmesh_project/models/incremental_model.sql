@@ -1,5 +1,6 @@
 MODEL (
   name sqlmesh_jaffle_platform.incremental_model,
+  tags ["dagster:group_name:sqlmesh_staging"],
   kind INCREMENTAL_BY_TIME_RANGE (
     time_column event_date
   ),

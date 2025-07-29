@@ -3,7 +3,8 @@ MODEL (
   kind FULL,
   cron '@daily',
   grain order_id,
-  partitioned_by = ["order_date"]
+  partitioned_by = ["order_date"],
+  tags ["dagster:group_name:sqlmesh_staging"]
 );
 
 

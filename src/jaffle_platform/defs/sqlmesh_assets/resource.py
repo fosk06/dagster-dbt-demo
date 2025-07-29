@@ -15,6 +15,8 @@ from .sqlmesh_asset_utils import (
     get_assetkey_to_snapshot,
     get_topologically_sorted_asset_keys,
     get_model_partitions,
+    has_breaking_changes,
+    format_partition_metadata,
 )
 
 
@@ -26,7 +28,6 @@ class SQLMeshResource(ConfigurableResource):
     
     project_dir: str
     gateway: str = "postgres"
-    config_override: Optional[dict] = None
     allow_breaking_changes: bool = False
 
     def __init__(self, **kwargs):
@@ -99,6 +100,14 @@ class SQLMeshResource(ConfigurableResource):
             select_models=model_names,
         )
         
+        # Vérifier les breaking changes si pas autorisés
+        if not self.allow_breaking_changes:
+            if has_breaking_changes(plan, self.logger, context):
+                raise ValueError(
+                    f"Breaking changes detected in plan {getattr(plan, 'plan_id', None)}. "
+                    "Set allow_breaking_changes=True to override this check."
+                )
+        
         if plan.requires_backfill:
             self.logger.info("Backfill required, applying plan...")
             self.context.apply(plan)
@@ -107,18 +116,6 @@ class SQLMeshResource(ConfigurableResource):
             self.context.apply(plan)
         
         return plan
-
-    async def materialize_assets_async(self, models, context=None):
-        """
-        Version asynchrone de materialize_assets utilisant anyio.
-        """
-        def run_materialization():
-            try:
-                return self.materialize_assets(models, context)
-            except Exception as e:
-                self.logger.error(f"Materialization failed: {e}")
-                raise
-        return await anyio.to_thread.run_sync(run_materialization)
 
     def materialize_assets_threaded(self, models, context=None):
         """
@@ -161,10 +158,14 @@ class SQLMeshResource(ConfigurableResource):
             
             # Préparer les métadonnées de base
             metadata = {
-                "sqlmesh_snapshot_version": snapshot_version,
-                "materialization_timestamp": str(getattr(snapshot, "created_ts", None)) if snapshot else None,
-                "sqlmesh_model_name": asset_key.path[-1] if asset_key.path else None,
+                "dagster-sqlmesh/snapshot_version": snapshot_version,
+                "dagster-sqlmesh/materialization_timestamp": str(getattr(snapshot, "created_ts", None)) if snapshot else None,
+                "dagster-sqlmesh/model_name": asset_key.path[-1] if asset_key.path else None,
             }
+            
+            # Ajouter les métadonnées de partition si le modèle est partitionné
+            if model_partitions and model_partitions.get("is_partitioned", False):
+                metadata["dagster-sqlmesh/partitions"] = format_partition_metadata(model_partitions)
             
             yield MaterializeResult(
                 asset_key=asset_key,

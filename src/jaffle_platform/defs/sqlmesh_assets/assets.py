@@ -19,7 +19,6 @@ class SlingToSqlmeshTranslator(SQLMeshTranslator):
 sqlmesh_resource = SQLMeshResource(
     project_dir="sqlmesh_project",
     gateway="postgres",
-    config_override=None,
     allow_breaking_changes=True,
     translator=SlingToSqlmeshTranslator(),
 )

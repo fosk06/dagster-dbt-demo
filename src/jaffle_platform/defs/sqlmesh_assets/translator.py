@@ -57,11 +57,6 @@ class SQLMeshTranslator:
         # Fallback: split sur les points si pas de guillemets
         return AssetKey([self.normalize_segment(s) for s in dep_str.split(".")])
 
-    def get_deps_from_model(self, model) -> list:
-        """Retourne les dépendances d'un modèle (version simple, sans external assets)."""
-        depends_on = getattr(model, "depends_on", set())
-        return [self.get_asset_key_from_dep_str(dep) for dep in depends_on]
-
     def get_model_deps_with_external(self, context, model) -> list:
         """
         Retourne les dépendances d'un modèle, distinguant les modèles internes SQLMesh
@@ -209,41 +204,3 @@ class SQLMeshTranslator:
                 external_deps.append(dep_str)
 
         return external_deps
-
-    def get_internal_dependencies(self, context, model) -> list:
-        """Retourne seulement les dépendances internes SQLMesh d'un modèle."""
-        depends_on = getattr(model, "depends_on", set())
-        internal_deps = []
-
-        for dep_str in depends_on:
-            if not self.is_external_dependency(context, dep_str):
-                internal_deps.append(dep_str)
-
-        return internal_deps
-
-
-class CustomSQLMeshTranslator(SQLMeshTranslator):
-    """
-    Exemple de translator custom pour montrer comment étendre le mapping.
-    """
-    
-    def get_external_asset_key(self, external_fqn: str) -> AssetKey:
-        """
-        Override pour un mapping custom des external assets.
-        Exemple: 'jaffle_db.main.raw_source_customers' → ['target', 'main', 'raw_source_customers']
-        """
-        parts = external_fqn.replace('"', '').split('.')
-        # On ignore le catalog (jaffle_db), on prend le reste
-        return AssetKey(['target'] + parts[1:])
-
-    def get_group_name(self, context, model) -> str:
-        """
-        Override pour des groupes custom.
-        """
-        # Exemple: les modèles staging dans le groupe "staging", les marts dans "marts"
-        model_name = getattr(model, "view_name", "")
-        if model_name.startswith("stg_"):
-            return "staging"
-        elif model_name.startswith("mart_"):
-            return "marts"
-        return super().get_group_name(context, model)

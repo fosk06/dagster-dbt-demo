@@ -3,6 +3,7 @@ MODEL (
   kind FULL,
   cron '@daily',
   grain store_id,
+  tags ["dagster:group_name:sqlmesh_staging"]
 );
 
 

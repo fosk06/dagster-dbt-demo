@@ -98,7 +98,6 @@ def get_topologically_sorted_asset_keys(context, translator, selected_asset_keys
     """
     models = list(context.models.values())
     assetkey_to_model = translator.get_assetkey_to_model(models)
-    fqn_to_model = {model.fqn: model for model in models}
     fqn_to_assetkey = {model.fqn: translator.get_asset_key(model) for model in models}
     selected_fqns = set(model.fqn for key, model in assetkey_to_model.items() if key in selected_asset_keys)
     topo_fqns = context.dag.sorted
@@ -151,13 +150,6 @@ def get_asset_kinds(translator, context) -> set:
     return {"sqlmesh", dialect}
 
 
-def get_asset_group_name(translator, context, model) -> str:
-    """
-    Retourne le group_name pour un asset.
-    """
-    return translator.get_group_name(context, model)
-
-
 def get_asset_tags(translator, context, model) -> dict:
     """
     Retourne les tags pour un asset.
@@ -196,6 +188,47 @@ def get_asset_metadata(translator, model, code_version, extra_keys, owners) -> d
     return metadata
 
 
+def format_partition_metadata(model_partitions: dict) -> dict:
+    """
+    Formate les métadonnées de partition pour les rendre plus lisibles.
+    
+    Args:
+        model_partitions: Dict avec les infos de partition brutes de SQLMesh
+    
+    Returns:
+        Dict avec les métadonnées formatées
+    """
+    formatted_metadata = {}
+    
+    # Colonnes de partition (on prend partitioned_by qui est plus standard)
+    if model_partitions.get("partitioned_by"):
+        formatted_metadata["partition_columns"] = model_partitions["partitioned_by"]
+    
+    # Intervalles convertis en datetime lisible
+    if model_partitions.get("intervals"):
+        from datetime import datetime
+        readable_intervals = []
+        for interval in model_partitions["intervals"]:
+            if len(interval) == 2:
+                start_ts, end_ts = interval
+                # Convertir les timestamps Unix (millisecondes) en datetime
+                start_dt = datetime.fromtimestamp(start_ts / 1000).strftime("%Y-%m-%d %H:%M:%S")
+                end_dt = datetime.fromtimestamp(end_ts / 1000).strftime("%Y-%m-%d %H:%M:%S")
+                readable_intervals.append({
+                    "start": start_dt,
+                    "end": end_dt,
+                    "start_timestamp": start_ts,
+                    "end_timestamp": end_ts
+                })
+        formatted_metadata["partition_intervals"] = readable_intervals
+    
+    # Grain (si présent et non vide)
+    if model_partitions.get("grain") and model_partitions["grain"]:
+        formatted_metadata["partition_grain"] = model_partitions["grain"]
+    
+    return formatted_metadata
+
+
 def get_column_descriptions_from_model(model) -> dict:
     """
     Extrait les column_descriptions d'un modèle SQLMesh et les formate pour Dagster.
@@ -211,43 +244,6 @@ def get_column_descriptions_from_model(model) -> dict:
         column_descriptions = model.model.column_descriptions
     
     return column_descriptions
-
-
-# --- Nouvelles fonctions pour gérer les external assets ---
-
-def get_external_dependencies_for_models(context, translator, models) -> dict:
-    """
-    Retourne un mapping de model FQN vers liste d'external dependencies.
-    context: SQLMesh Context
-    translator: SQLMeshTranslator instance
-    models: list de SQLMesh models
-    """
-    external_deps = {}
-    for model in models:
-        # Ignorer les external models
-        if isinstance(model, ExternalModel):
-            continue
-            
-        external_deps[model.fqn] = translator.get_external_dependencies(context, model)
-    return external_deps
-
-
-def get_internal_dependencies_for_models(context, translator, models) -> dict:
-    """
-    Retourne un mapping de model FQN vers liste d'internal dependencies.
-    context: SQLMesh Context
-    translator: SQLMeshTranslator instance
-    models: list de SQLMesh models
-    """
-    internal_deps = {}
-    for model in models:
-        # Ignorer les external models
-        if isinstance(model, ExternalModel):
-            continue
-            
-        internal_deps[model.fqn] = translator.get_internal_dependencies(context, model)
-    return internal_deps
-
 
 def validate_external_dependencies(context, translator, models) -> list:
     """
