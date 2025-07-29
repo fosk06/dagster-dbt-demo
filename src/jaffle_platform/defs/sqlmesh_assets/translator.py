@@ -1,17 +1,9 @@
 import re
 from dataclasses import dataclass, field
-from dagster import AssetKey, PartitionsDefinition
+from dagster import AssetKey
 from dagster._core.definitions.metadata import TableMetadataSet, TableSchema, TableColumn
-from dagster import (
-    DailyPartitionsDefinition,
-    WeeklyPartitionsDefinition, 
-    MonthlyPartitionsDefinition,
-    TimeWindowPartitionsDefinition
-)
-from dagster._core.definitions.partitions.schedule_type import ScheduleType
 import json
-from typing import Callable, Optional, Mapping, Any
-from datetime import datetime
+from typing import Optional, Any
 from sqlmesh.core.model.definition import ExternalModel
 
 @dataclass
@@ -45,7 +37,6 @@ class SQLMeshTranslator:
         parts = [self.normalize_segment(s) for s in re.findall(r'"([^"]+)"', external_fqn)]
         if len(parts) == 3:
             catalog, schema, table = parts
-            # Mapping par défaut pour les sources externes
             if catalog == "main" and schema == "external":
                 return AssetKey(["sling", table])
             elif catalog == "jaffle_db" and schema == "external":
@@ -229,58 +220,6 @@ class SQLMeshTranslator:
                 internal_deps.append(dep_str)
 
         return internal_deps
-
-    def map_sqlmesh_cron_to_dagster_partitions(self, cron_expression: str, start_date: str = "2024-01-01") -> Optional[PartitionsDefinition]:
-        """Convertit les types de partitions SQLMesh vers Dagster"""
-        
-        # Mapping des expressions cron SQLMesh vers les types de schedule Dagster
-        schedule_mapping = {
-            "@hourly": ScheduleType.HOURLY,
-            "@daily": ScheduleType.DAILY,
-            "@weekly": ScheduleType.WEEKLY,
-            "@monthly": ScheduleType.MONTHLY,
-        }
-        
-        schedule_type = schedule_mapping.get(cron_expression)
-        
-        if schedule_type:
-            # Déterminer le format selon le type de schedule
-            if schedule_type == ScheduleType.HOURLY:
-                fmt = "%Y-%m-%d-%H"
-            else:
-                fmt = "%Y-%m-%d"
-            
-            return TimeWindowPartitionsDefinition(
-                start=datetime.fromisoformat(start_date),
-                end=datetime.now(),
-                fmt=fmt,
-                schedule_type=schedule_type
-            )
-        
-        return None
-
-    def get_partitions_def(self, model) -> Optional[PartitionsDefinition]:
-        """Détermine les partitions Dagster à partir des propriétés SQLMesh"""
-        
-        # Récupérer les infos de partition SQLMesh
-        partitioned_by = getattr(model, "partitioned_by", [])
-        cron = getattr(model, "cron", None)
-        
-        if not partitioned_by or not cron:
-            return None
-            
-        # Mapper vers Dagster
-        return self.map_sqlmesh_cron_to_dagster_partitions(cron)
-
-    def get_sqlmesh_partition_info(self, snapshot) -> dict:
-        """Extrait les infos de partition d'un snapshot SQLMesh"""
-        
-        return {
-            "partitioned_by": getattr(snapshot, "partitioned_by", []),
-            "cron": getattr(snapshot, "cron", None),
-            "intervals": getattr(snapshot, "intervals", []),
-            "partition_columns": getattr(snapshot, "partition_columns", [])
-        }
 
 
 class CustomSQLMeshTranslator(SQLMeshTranslator):

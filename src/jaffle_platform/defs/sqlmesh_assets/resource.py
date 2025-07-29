@@ -4,14 +4,9 @@ import logging
 from typing import Any, Optional
 from dagster import (
     ConfigurableResource, 
-    Field, 
-    RetryPolicy, 
-    AssetKey, 
     MaterializeResult, 
     DataVersion, 
-    PartitionKeyRange
 )
-from datetime import datetime
 from sqlmesh import Context
 from .translator import SQLMeshTranslator
 from .sqlmesh_asset_utils import (
@@ -22,39 +17,6 @@ from .sqlmesh_asset_utils import (
     get_model_partitions,
 )
 
-
-def convert_intervals_to_partition_range(intervals) -> PartitionKeyRange:
-    """
-    Convertit les intervalles SQLMesh (timestamps Unix) en PartitionKeyRange Dagster.
-    
-    Args:
-        intervals: Liste de tuples (start_timestamp, end_timestamp)
-    
-    Returns:
-        PartitionKeyRange ou None si conversion impossible
-    """
-    if not intervals or len(intervals) == 0:
-        return None
-    
-    try:
-        # Prendre le premier intervalle (on pourrait étendre pour gérer plusieurs)
-        start_timestamp, end_timestamp = intervals[0]
-        
-        # Convertir les timestamps Unix (millisecondes) en datetime
-        # Les timestamps semblent être en millisecondes (13 chiffres)
-        start_dt = datetime.fromtimestamp(start_timestamp / 1000)
-        end_dt = datetime.fromtimestamp(end_timestamp / 1000)
-        
-        # Formater en string pour PartitionKeyRange
-        start_str = start_dt.strftime("%Y-%m-%d")
-        end_str = end_dt.strftime("%Y-%m-%d")
-        
-        return PartitionKeyRange(start_str, end_str)
-        
-    except (ValueError, TypeError, IndexError) as e:
-        # Log l'erreur mais ne pas faire planter
-        print(f"Erreur conversion intervals: {e}")
-        return None
 
 class SQLMeshResource(ConfigurableResource):
     """

@@ -1,7 +1,7 @@
 # Utility functions for SQLMeshResource and Dagster integration
 
 from sqlmesh.core.model.definition import ExternalModel
-from typing import List, Dict, Any, Optional
+from typing import Any, Optional
 
 
 def extract_metadata(obj, fields: list[str], prefix: str = "sqlmesh_") -> dict:
