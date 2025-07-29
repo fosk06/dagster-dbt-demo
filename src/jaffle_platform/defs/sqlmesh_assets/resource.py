@@ -17,6 +17,7 @@ from .sqlmesh_asset_utils import (
     get_model_partitions,
     has_breaking_changes,
     format_partition_metadata,
+    get_model_partitions_from_plan,
 )
 
 
@@ -97,7 +98,7 @@ class SQLMeshResource(ConfigurableResource):
         model_names = [model.name for model in models]
         
         plan = self.context.plan(
-            select_models=model_names,
+            select_models=model_names
         )
         
         # Vérifier les breaking changes si pas autorisés
@@ -139,9 +140,19 @@ class SQLMeshResource(ConfigurableResource):
             self.get_models,
             self.translator,
         )
+        
+        # Créer et appliquer le plan
         plan = self.materialize_assets_threaded(models_to_materialize, context=context)
         plan_metadata = extract_plan_metadata(plan)
-        assetkey_to_snapshot = get_assetkey_to_snapshot(self.context, self.translator)
+        
+        # Extraire les snapshots catégorisés directement depuis le plan
+        assetkey_to_snapshot = {}
+        for snapshot in plan.snapshots.values():
+            model = snapshot.model
+            asset_key = self.translator.get_asset_key(model)
+            assetkey_to_snapshot[asset_key] = snapshot
+        
+        # Trier les asset keys dans l'ordre topologique
         ordered_asset_keys = get_topologically_sorted_asset_keys(
             self.context, self.translator, selected_asset_keys
         )
@@ -151,24 +162,26 @@ class SQLMeshResource(ConfigurableResource):
         else:
             self.logger.info(f"SQLMesh plan metadata: {plan_metadata}")
 
+        # Créer les MaterializeResult avec les infos du plan
         for asset_key in ordered_asset_keys:
             snapshot = assetkey_to_snapshot.get(asset_key)
-            snapshot_version = getattr(snapshot, "version", None)
-            model_partitions = get_model_partitions(self.context, self.translator, asset_key, snapshot)
-            
-            # Préparer les métadonnées de base
-            metadata = {
-                "dagster-sqlmesh/snapshot_version": snapshot_version,
-                "dagster-sqlmesh/materialization_timestamp": str(getattr(snapshot, "created_ts", None)) if snapshot else None,
-                "dagster-sqlmesh/model_name": asset_key.path[-1] if asset_key.path else None,
-            }
-            
-            # Ajouter les métadonnées de partition si le modèle est partitionné
-            if model_partitions and model_partitions.get("is_partitioned", False):
-                metadata["dagster-sqlmesh/partitions"] = format_partition_metadata(model_partitions)
-            
-            yield MaterializeResult(
-                asset_key=asset_key,
-                metadata=metadata,
-                data_version=DataVersion(str(snapshot_version)) if snapshot_version else None
-            )
+            if snapshot:
+                snapshot_version = getattr(snapshot, "version", None)
+                model_partitions = get_model_partitions_from_plan(plan, self.translator, asset_key, snapshot)
+                
+                # Préparer les métadonnées de base
+                metadata = {
+                    "sqlmesh_snapshot_version": snapshot_version,
+                    "materialization_timestamp": str(getattr(snapshot, "created_ts", None)) if snapshot else None,
+                    "sqlmesh_model_name": asset_key.path[-1] if asset_key.path else None,
+                }
+                
+                # Ajouter les métadonnées de partition si le modèle est partitionné
+                if model_partitions and model_partitions.get("is_partitioned", False):
+                    metadata["sqlmesh_partitions"] = format_partition_metadata(model_partitions)
+                
+                yield MaterializeResult(
+                    asset_key=asset_key,
+                    metadata=metadata,
+                    data_version=DataVersion(str(snapshot_version)) if snapshot_version else None
+                )

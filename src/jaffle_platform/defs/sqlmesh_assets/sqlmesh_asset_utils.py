@@ -2,7 +2,8 @@
 
 from sqlmesh.core.model.definition import ExternalModel
 from typing import Any, Optional
-
+import json
+from datetime import datetime
 
 def extract_metadata(obj, fields: list[str], prefix: str = "sqlmesh_") -> dict:
     """
@@ -65,6 +66,32 @@ def get_assetkey_to_snapshot(context, translator) -> dict:
         assetkey_to_snapshot[asset_key] = snapshot
     return assetkey_to_snapshot
 
+def get_model_partitions_from_plan(plan, translator, asset_key, snapshot) -> dict:
+    """Retourne les informations de partition pour un asset en utilisant le plan."""
+    # Convertir AssetKey vers le modèle SQLMesh
+    model = snapshot.model if snapshot else None
+    
+    if model:
+        partitioned_by = getattr(model, "partitioned_by", [])
+        # Extraire les noms des colonnes de partition
+        partition_columns = [col.name for col in partitioned_by] if partitioned_by else []
+        
+        # Utiliser les intervals du snapshot du plan (qui est catégorisé)
+        intervals = getattr(snapshot, "intervals", [])
+        grain = getattr(model, "grain", [])
+        is_partitioned = len(partition_columns) > 0
+        
+        return {
+            "partitioned_by": partition_columns, 
+            "intervals": intervals, 
+            "partition_columns": partition_columns, 
+            "grain": grain, 
+            "is_partitioned": is_partitioned
+        }
+    
+    return {"partitioned_by": [], "intervals": []}
+
+
 def get_model_partitions(context, translator, asset_key, snapshot) -> dict:
     """Retourne les informations de partition pour un asset."""
     # Convertir AssetKey vers le modèle SQLMesh
@@ -74,10 +101,19 @@ def get_model_partitions(context, translator, asset_key, snapshot) -> dict:
         partitioned_by = getattr(model, "partitioned_by", [])
         # Extraire les noms des colonnes de partition
         partition_columns = [col.name for col in partitioned_by] if partitioned_by else []
+        
+        # Utiliser les intervals du snapshot (qui sera catégorisé après le plan + apply)
         intervals = getattr(snapshot, "intervals", [])
         grain = getattr(model, "grain", [])
         is_partitioned = len(partition_columns) > 0
-        return {"partitioned_by": partition_columns, "intervals": intervals, "partition_columns": partition_columns, "grain": grain, "is_partitioned": is_partitioned}
+        
+        return {
+            "partitioned_by": partition_columns, 
+            "intervals": intervals, 
+            "partition_columns": partition_columns, 
+            "grain": grain, 
+            "is_partitioned": is_partitioned
+        }
     
     return {"partitioned_by": [], "intervals": []}
 
@@ -206,9 +242,16 @@ def format_partition_metadata(model_partitions: dict) -> dict:
     
     # Intervalles convertis en datetime lisible
     if model_partitions.get("intervals"):
-        from datetime import datetime
         readable_intervals = []
-        for interval in model_partitions["intervals"]:
+        intervals = model_partitions["intervals"]
+        
+        # Debug: afficher les intervals bruts
+        print(f"DEBUG: intervals bruts = {intervals}")
+        print(f"DEBUG: type intervals = {type(intervals)}")
+        print(f"DEBUG: len intervals = {len(intervals) if intervals else 0}")
+        
+        for interval in intervals:
+            print(f"DEBUG: processing interval = {interval}")
             if len(interval) == 2:
                 start_ts, end_ts = interval
                 # Convertir les timestamps Unix (millisecondes) en datetime
@@ -220,6 +263,12 @@ def format_partition_metadata(model_partitions: dict) -> dict:
                     "start_timestamp": start_ts,
                     "end_timestamp": end_ts
                 })
+                print(f"DEBUG: added interval {start_dt} to {end_dt}")
+            else:
+                print(f"DEBUG: interval malformé: {interval}")
+        
+        print(f"DEBUG: readable_intervals final = {readable_intervals}")
+        # Utiliser directement l'objet Python (Dagster peut le gérer)
         formatted_metadata["partition_intervals"] = readable_intervals
     
     # Grain (si présent et non vide)
