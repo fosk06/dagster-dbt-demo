@@ -171,14 +171,14 @@ class SQLMeshResource(ConfigurableResource):
                 
                 # Préparer les métadonnées de base
                 metadata = {
-                    "sqlmesh_snapshot_version": snapshot_version,
+                    "dagster-sqlmesh/snapshot_version": snapshot_version,
                     "materialization_timestamp": str(getattr(snapshot, "created_ts", None)) if snapshot else None,
-                    "sqlmesh_model_name": asset_key.path[-1] if asset_key.path else None,
+                    "dagster-sqlmesh/model_name": asset_key.path[-1] if asset_key.path else None,
                 }
                 
                 # Ajouter les métadonnées de partition si le modèle est partitionné
                 if model_partitions and model_partitions.get("is_partitioned", False):
-                    metadata["sqlmesh_partitions"] = format_partition_metadata(model_partitions)
+                    metadata["dagster-sqlmesh/partitions"] = format_partition_metadata(model_partitions)
                 
                 yield MaterializeResult(
                     asset_key=asset_key,
