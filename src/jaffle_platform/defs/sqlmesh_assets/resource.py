@@ -21,7 +21,15 @@ from .sqlmesh_asset_utils import (
     get_model_audits_from_plan,
 )
 from .sqlmesh_dagster_console import SQLMeshDagsterConsole
-
+from sqlmesh.utils.errors import (
+    SQLMeshError,
+    PlanError,
+    ConflictingPlanError,
+    NodeAuditsErrors,
+    CircuitBreakerError,
+)
+from sqlmesh.utils.concurrency import NodeExecutionFailedError
+import time
 
 def convert_unix_timestamp_to_readable(timestamp):
     """
@@ -46,6 +54,9 @@ def convert_unix_timestamp_to_readable(timestamp):
         return str(timestamp)
 
 
+# Lock global pour le singleton de la console SQLMesh
+_console_lock = threading.Lock()
+
 class SQLMeshResource(ConfigurableResource):
     """
     Resource Dagster pour interagir avec SQLMesh.
@@ -55,38 +66,46 @@ class SQLMeshResource(ConfigurableResource):
     project_dir: str
     gateway: str = "postgres"
     allow_breaking_changes: bool = False
-
+    concurrency_limit: int = 1
+    
+    # Singleton pour la console SQLMesh (initialisé de manière lazy)
+    
     def __init__(self, **kwargs):
         # Extraire le translator avant d'appeler super().__init__
         translator = kwargs.pop('translator', None)
-        
         super().__init__(**kwargs)
-        self._translator_instance = translator  # Stocke le translator fourni
-        self._instance_id = id(self)
         
-        # Initialiser la console à None
-        if not hasattr(SQLMeshResource, '_console'):
-            SQLMeshResource._console = None
-
-        # Singleton strict control - using class variables outside of Pydantic fields
-        if not hasattr(SQLMeshResource, '_instance_lock'):
-            SQLMeshResource._instance_lock = threading.Lock()
-            SQLMeshResource._active_instances = set()
-
-        with self._instance_lock:
-            if self._instance_id in self._active_instances:
-                raise Exception("Only one SQLMesh instance allowed at a time")
-            self._active_instances.add(self._instance_id)
+        # Stocker le translator pour utilisation ultérieure
+        if translator:
+            self._translator_instance = translator
+            
+        # Initialiser l'ID unique pour cette instance
+        self._instance_id = id(self)
 
     def __del__(self):
-        if hasattr(self, '_instance_id'):
-            with self._instance_lock:
-                self._active_instances.discard(self._instance_id)
+        pass  # Cleanup simplifié
 
     @property
     def logger(self):
         """Retourne le logger pour cette resource."""
         return logging.getLogger(__name__)
+
+    @classmethod
+    def _get_or_create_console(cls) -> 'SQLMeshDagsterConsole':
+        """Crée ou retourne l'instance singleton de la console SQLMesh."""
+        # Initialiser les variables de classe de manière lazy
+        if not hasattr(cls, '_console_instance'):
+            cls._console_instance = None
+        
+        if cls._console_instance is None:
+            with _console_lock:
+                if cls._console_instance is None:  # Double-check pattern
+                    cls._console_instance = SQLMeshDagsterConsole(
+                        verbosity=Verbosity.DEFAULT,
+                        ignore_warnings=False
+                    )
+                    set_console(cls._console_instance)
+        return cls._console_instance
 
     @property
     def context(self) -> Context:
@@ -95,14 +114,8 @@ class SQLMeshResource(ConfigurableResource):
         """
         if not hasattr(self, '_context_cache'):
             # Configurer la console custom avant de créer le contexte
-            if SQLMeshResource._console is None:
-                SQLMeshResource._console = SQLMeshDagsterConsole(
-                    verbosity=Verbosity.DEFAULT,
-                    ignore_warnings=False
-                )
-                # Configurer le logger après la création
-                SQLMeshResource._console.logger = self.logger
-                set_console(SQLMeshResource._console)
+            console = self._get_or_create_console()
+            console.logger = self.logger  # Mettre à jour le logger
             
             self._context_cache = Context(
                 paths=self.project_dir,
@@ -131,31 +144,82 @@ class SQLMeshResource(ConfigurableResource):
 
     def materialize_assets(self, models, context=None):
         """
-        Matérialise les assets SQLMesh spécifiés.
+        Matérialise les assets SQLMesh spécifiés avec gestion d'erreurs robuste.
         """
-        # Extraire les noms des modèles
+        import os
+        import time
+        
+        pid = os.getpid()
+        timestamp = time.strftime("%H:%M:%S")
         model_names = [model.name for model in models]
         
-        plan = self.context.plan(
-            select_models=model_names
-        )
+        print(f"🔍 PLAN DEBUG [{timestamp}] PID:{pid} - Début materialize_assets")
+        print(f"   📋 Modèles: {model_names}")
         
-        # Vérifier les breaking changes si pas autorisés
-        if not self.allow_breaking_changes:
-            if has_breaking_changes(plan, self.logger, context):
-                raise ValueError(
-                    f"Breaking changes detected in plan {getattr(plan, 'plan_id', None)}. "
-                    "Set allow_breaking_changes=True to override this check."
+        max_retries = 3
+        retry_count = 0
+        
+        while retry_count < max_retries:
+            try:
+                print(f"🔍 PLAN DEBUG [{timestamp}] PID:{pid} - Tentative {retry_count + 1}/{max_retries}")
+                print(f"🔍 PLAN DEBUG [{timestamp}] PID:{pid} - Appel context.plan()")
+                
+                plan = self.context.plan(
+                    select_models=model_names,
+                    auto_apply=True
                 )
-        
-        if plan.requires_backfill:
-            self.logger.info("Backfill required, applying plan...")
-            self.context.apply(plan)
-        else:
-            self.logger.info("No backfill required, applying plan...")
-            self.context.apply(plan)
-        
-        return plan
+                
+                print(f"🔍 PLAN DEBUG [{timestamp}] PID:{pid} - Plan créé: {getattr(plan, 'plan_id', 'N/A')}")
+                
+                # Délai entre plan et apply pour éviter les conflits
+                print(f"⏳ Attendre 10 secondes entre plan et apply...")
+                time.sleep(10)
+                
+                print(f"🔍 APPLY DEBUG [{timestamp}] PID:{pid} - Applying plan...")
+                self.context.apply(plan)
+                print(f"🔍 APPLY DEBUG [{timestamp}] PID:{pid} - Plan appliqué avec succès")
+                
+                # Attendre que SQLMesh finalise son travail interne
+                print(f"⏳ Attendre 1 seconde pour laisser SQLMesh se stabiliser...")
+                time.sleep(1)
+                print(f"✅ SQLMesh stabilisé")
+                
+                print(f"🔍 PLAN DEBUG [{timestamp}] PID:{pid} - Fin materialize_assets")
+                return plan
+                
+            except ConflictingPlanError as e:
+                retry_count += 1
+                print(f"❌ ConflictingPlanError détectée (tentative {retry_count}/{max_retries}): {e}")
+                
+                if retry_count < max_retries:
+                    print(f"⏳ Attendre {retry_count * 2} secondes pour laisser SQLMesh se stabiliser...")
+                    time.sleep(retry_count * 2)
+                    
+                    print(f"🔄 Retry: nettoyage + nouveau plan + apply...")
+                    
+                    # Essayer de nettoyer l'environnement
+                    try:
+                        self.context.invalidate_environment("prod", sync=True)
+                        print(f"✅ Environnement invalidé")
+                    except Exception as cleanup_error:
+                        print(f"⚠️ Échec du nettoyage: {cleanup_error}")
+                    
+                    continue
+                else:
+                    print(f"❌ Échec après {max_retries} tentatives")
+                    raise
+                    
+            except (PlanError, NodeExecutionFailedError, NodeAuditsErrors, CircuitBreakerError) as e:
+                print(f"❌ Erreur critique SQLMesh: {type(e).__name__}: {e}")
+                raise
+                
+            except SQLMeshError as e:
+                print(f"❌ SQLMeshError: {e}")
+                raise
+                
+            except Exception as e:
+                print(f"❌ Exception inattendue: {type(e).__name__}: {e}")
+                raise
 
     def materialize_assets_threaded(self, models, context=None):
         """

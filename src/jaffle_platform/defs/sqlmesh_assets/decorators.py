@@ -103,7 +103,7 @@ def sqlmesh_assets_factory(
         op_tags=op_tags,
         required_resource_keys=required_resource_keys,
         retry_policy=retry_policy,
-        can_subset=True,  # Permettre des partitions différentes entre les assets
+        can_subset=True
     )
     def _sqlmesh_assets(context: AssetExecutionContext, sqlmesh: SQLMeshResource):
         yield from sqlmesh.materialize_all_assets(context)

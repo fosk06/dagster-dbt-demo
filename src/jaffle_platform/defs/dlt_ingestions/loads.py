@@ -24,7 +24,6 @@ class DltToDbtTranslator(DagsterDltTranslator):
     def get_asset_spec(self, data: DltResourceTranslatorData) -> AssetSpec:
         """Overrides asset spec to override asset key to be the same as dbt source asset name"""
         default_spec = super().get_asset_spec(data)
-        print(f"resource name: {data.resource.name}")
         return default_spec.replace_attributes(
             key=AssetKey(['target', 'main', f"{data.resource.name}"]),  # the dbt component format the keys like this
         )

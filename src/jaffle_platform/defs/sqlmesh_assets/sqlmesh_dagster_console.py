@@ -4,6 +4,7 @@ from sqlmesh.core.snapshot import Snapshot
 from sqlmesh.core.snapshot.definition import Interval
 from typing import List, Dict, Any, Optional
 from dagster import get_dagster_logger
+import logging
 
 class SQLMeshDagsterConsole(TerminalConsole):
     """Console custom qui capture les résultats d'audit de manière précise"""
@@ -12,11 +13,8 @@ class SQLMeshDagsterConsole(TerminalConsole):
         super().__init__(**kwargs)
         self.audit_results: List[Dict[str, Any]] = []
         self.audit_stats: Dict[str, Dict[str, int]] = {}  # Par snapshot
-        
-        # Log pour vérifier que notre console est bien créée
-        print("🚀 SQLMeshDagsterConsole créée avec succès!")
-        print("   📊 Audit capture activée")
-        print("   🔧 Console custom configurée")
+        # Log unique pour signaler l'activation de la console custom
+        print("🚀 SQLMeshDagsterConsole custom activée")
     
     def update_snapshot_evaluation_progress(
         self,

@@ -252,13 +252,7 @@ def format_partition_metadata(model_partitions: dict) -> dict:
         readable_intervals = []
         intervals = model_partitions["intervals"]
         
-        # Debug: afficher les intervals bruts
-        print(f"DEBUG: intervals bruts = {intervals}")
-        print(f"DEBUG: type intervals = {type(intervals)}")
-        print(f"DEBUG: len intervals = {len(intervals) if intervals else 0}")
-        
         for interval in intervals:
-            print(f"DEBUG: processing interval = {interval}")
             if len(interval) == 2:
                 start_ts, end_ts = interval
                 # Convertir les timestamps Unix (millisecondes) en datetime
@@ -270,11 +264,7 @@ def format_partition_metadata(model_partitions: dict) -> dict:
                     "start_timestamp": start_ts,
                     "end_timestamp": end_ts
                 })
-                print(f"DEBUG: added interval {start_dt} to {end_dt}")
-            else:
-                print(f"DEBUG: interval malformé: {interval}")
         
-        print(f"DEBUG: readable_intervals final = {readable_intervals}")
         # Utiliser directement l'objet Python (Dagster peut le gérer)
         formatted_metadata["partition_intervals"] = readable_intervals
     
