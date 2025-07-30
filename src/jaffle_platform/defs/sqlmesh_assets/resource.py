@@ -9,17 +9,18 @@ from dagster import (
     DataVersion, 
 )
 from sqlmesh import Context
+from sqlmesh.core.console import set_console, Verbosity
 from .translator import SQLMeshTranslator
 from .sqlmesh_asset_utils import (
     get_models_to_materialize,
     extract_plan_metadata,
-    get_assetkey_to_snapshot,
     get_topologically_sorted_asset_keys,
-    get_model_partitions,
     has_breaking_changes,
     format_partition_metadata,
     get_model_partitions_from_plan,
+    get_model_audits_from_plan,
 )
+from .sqlmesh_dagster_console import SQLMeshDagsterConsole
 
 
 def convert_unix_timestamp_to_readable(timestamp):
@@ -27,7 +28,7 @@ def convert_unix_timestamp_to_readable(timestamp):
     Convertit un timestamp Unix en date lisible.
     
     Args:
-        timestamp: Timestamp Unix (int ou float)
+        timestamp: Timestamp Unix en millisecondes (int ou float)
         
     Returns:
         str: Date au format "YYYY-MM-DD HH:MM:SS" ou None si timestamp est None
@@ -36,7 +37,9 @@ def convert_unix_timestamp_to_readable(timestamp):
         return None
     
     try:
-        dt = datetime.datetime.fromtimestamp(timestamp)
+        # Convertir les millisecondes en secondes
+        timestamp_seconds = timestamp / 1000
+        dt = datetime.datetime.fromtimestamp(timestamp_seconds)
         return dt.strftime("%Y-%m-%d %H:%M:%S")
     except (ValueError, TypeError):
         # Fallback si la conversion échoue
@@ -60,6 +63,10 @@ class SQLMeshResource(ConfigurableResource):
         super().__init__(**kwargs)
         self._translator_instance = translator  # Stocke le translator fourni
         self._instance_id = id(self)
+        
+        # Initialiser la console à None
+        if not hasattr(SQLMeshResource, '_console'):
+            SQLMeshResource._console = None
 
         # Singleton strict control - using class variables outside of Pydantic fields
         if not hasattr(SQLMeshResource, '_instance_lock'):
@@ -87,6 +94,16 @@ class SQLMeshResource(ConfigurableResource):
         Retourne le contexte SQLMesh. Cached pour les performances.
         """
         if not hasattr(self, '_context_cache'):
+            # Configurer la console custom avant de créer le contexte
+            if SQLMeshResource._console is None:
+                SQLMeshResource._console = SQLMeshDagsterConsole(
+                    verbosity=Verbosity.DEFAULT,
+                    ignore_warnings=False
+                )
+                # Configurer le logger après la création
+                SQLMeshResource._console.logger = self.logger
+                set_console(SQLMeshResource._console)
+            
             self._context_cache = Context(
                 paths=self.project_dir,
                 gateway=self.gateway,
@@ -190,7 +207,7 @@ class SQLMeshResource(ConfigurableResource):
             if snapshot:
                 snapshot_version = getattr(snapshot, "version", None)
                 model_partitions = get_model_partitions_from_plan(plan, self.translator, asset_key, snapshot)
-                
+                model_audits = get_model_audits_from_plan(plan, self.translator, asset_key)
                 # Préparer les métadonnées de base
                 metadata = {
                     "dagster-sqlmesh/snapshot_version": snapshot_version,

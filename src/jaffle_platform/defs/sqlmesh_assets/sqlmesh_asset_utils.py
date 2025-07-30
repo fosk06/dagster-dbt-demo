@@ -66,6 +66,13 @@ def get_assetkey_to_snapshot(context, translator) -> dict:
         assetkey_to_snapshot[asset_key] = snapshot
     return assetkey_to_snapshot
 
+def get_model_audits_from_plan(plan, translator, asset_key) -> dict:
+    """Retourne les audits pour un asset en utilisant le plan."""
+    # Convertir AssetKey vers le modèle SQLMesh
+    # snapshots = plan.snapshots.items()
+    # audit_snapshots = [snapshot for snapshot in snapshots if snapshot.is_audit]
+    return True
+
 def get_model_partitions_from_plan(plan, translator, asset_key, snapshot) -> dict:
     """Retourne les informations de partition pour un asset en utilisant le plan."""
     # Convertir AssetKey vers le modèle SQLMesh
