@@ -20,7 +20,7 @@ from .sqlmesh_asset_utils import (
     get_model_partitions_from_plan,
     get_model_audits_from_plan,
 )
-from .sqlmesh_dagster_console import SQLMeshDagsterConsole
+from .sqlmesh_event_console import SQLMeshEventCaptureConsole
 from sqlmesh.utils.errors import (
     SQLMeshError,
     PlanError,
@@ -91,8 +91,8 @@ class SQLMeshResource(ConfigurableResource):
         return logging.getLogger(__name__)
 
     @classmethod
-    def _get_or_create_console(cls) -> 'SQLMeshDagsterConsole':
-        """Crée ou retourne l'instance singleton de la console SQLMesh."""
+    def _get_or_create_console(cls) -> 'SQLMeshEventCaptureConsole':
+        """Crée ou retourne l'instance singleton de la console SQLMesh événementielle."""
         # Initialiser les variables de classe de manière lazy
         if not hasattr(cls, '_console_instance'):
             cls._console_instance = None
@@ -100,9 +100,8 @@ class SQLMeshResource(ConfigurableResource):
         if cls._console_instance is None:
             with _console_lock:
                 if cls._console_instance is None:  # Double-check pattern
-                    cls._console_instance = SQLMeshDagsterConsole(
-                        verbosity=Verbosity.DEFAULT,
-                        ignore_warnings=False
+                    cls._console_instance = SQLMeshEventCaptureConsole(
+                        # verbosity et ignore_warnings ne sont pas supportés par IntrospectingConsole
                     )
                     set_console(cls._console_instance)
         return cls._console_instance
@@ -153,38 +152,25 @@ class SQLMeshResource(ConfigurableResource):
         timestamp = time.strftime("%H:%M:%S")
         model_names = [model.name for model in models]
         
-        print(f"🔍 PLAN DEBUG [{timestamp}] PID:{pid} - Début materialize_assets")
-        print(f"   📋 Modèles: {model_names}")
-        
         max_retries = 3
         retry_count = 0
         
         while retry_count < max_retries:
             try:
-                print(f"🔍 PLAN DEBUG [{timestamp}] PID:{pid} - Tentative {retry_count + 1}/{max_retries}")
-                print(f"🔍 PLAN DEBUG [{timestamp}] PID:{pid} - Appel context.plan()")
-                
                 plan = self.context.plan(
                     select_models=model_names,
                     auto_apply=True
                 )
                 
-                print(f"🔍 PLAN DEBUG [{timestamp}] PID:{pid} - Plan créé: {getattr(plan, 'plan_id', 'N/A')}")
-                
-                # Délai entre plan et apply pour éviter les conflits
-                print(f"⏳ Attendre 10 secondes entre plan et apply...")
-                time.sleep(10)
-                
-                print(f"🔍 APPLY DEBUG [{timestamp}] PID:{pid} - Applying plan...")
                 self.context.apply(plan)
-                print(f"🔍 APPLY DEBUG [{timestamp}] PID:{pid} - Plan appliqué avec succès")
                 
-                # Attendre que SQLMesh finalise son travail interne
-                print(f"⏳ Attendre 1 seconde pour laisser SQLMesh se stabiliser...")
-                time.sleep(1)
-                print(f"✅ SQLMesh stabilisé")
+                # Récupérer TOUS les événements capturés
+                console = self._get_or_create_console()
+                all_events = console.get_all_events()
                 
-                print(f"🔍 PLAN DEBUG [{timestamp}] PID:{pid} - Fin materialize_assets")
+                # Nettoyer les événements pour la prochaine materialization
+                console.clear_events()
+                
                 return plan
                 
             except ConflictingPlanError as e:
@@ -259,11 +245,6 @@ class SQLMeshResource(ConfigurableResource):
         ordered_asset_keys = get_topologically_sorted_asset_keys(
             self.context, self.translator, selected_asset_keys
         )
-
-        if context and hasattr(context, "log"):
-            context.log.info(f"SQLMesh plan metadata: {plan_metadata}")
-        else:
-            self.logger.info(f"SQLMesh plan metadata: {plan_metadata}")
 
         # Créer les MaterializeResult avec les infos du plan
         for asset_key in ordered_asset_keys:
