@@ -172,7 +172,7 @@ class SQLMeshResource(ConfigurableResource):
                 # Préparer les métadonnées de base
                 metadata = {
                     "dagster-sqlmesh/snapshot_version": snapshot_version,
-                    "materialization_timestamp": str(getattr(snapshot, "created_ts", None)) if snapshot else None,
+                    "dagster-sqlmesh/snapshot_timestamp": str(getattr(snapshot, "created_ts", None)) if snapshot else None,
                     "dagster-sqlmesh/model_name": asset_key.path[-1] if asset_key.path else None,
                 }
                 
