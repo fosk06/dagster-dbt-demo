@@ -1,6 +1,7 @@
 import threading
 import anyio
 import logging
+import datetime
 from typing import Any, Optional
 from dagster import (
     ConfigurableResource, 
@@ -19,6 +20,27 @@ from .sqlmesh_asset_utils import (
     format_partition_metadata,
     get_model_partitions_from_plan,
 )
+
+
+def convert_unix_timestamp_to_readable(timestamp):
+    """
+    Convertit un timestamp Unix en date lisible.
+    
+    Args:
+        timestamp: Timestamp Unix (int ou float)
+        
+    Returns:
+        str: Date au format "YYYY-MM-DD HH:MM:SS" ou None si timestamp est None
+    """
+    if timestamp is None:
+        return None
+    
+    try:
+        dt = datetime.datetime.fromtimestamp(timestamp)
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+    except (ValueError, TypeError):
+        # Fallback si la conversion échoue
+        return str(timestamp)
 
 
 class SQLMeshResource(ConfigurableResource):
@@ -172,7 +194,7 @@ class SQLMeshResource(ConfigurableResource):
                 # Préparer les métadonnées de base
                 metadata = {
                     "dagster-sqlmesh/snapshot_version": snapshot_version,
-                    "dagster-sqlmesh/snapshot_timestamp": str(getattr(snapshot, "created_ts", None)) if snapshot else None,
+                    "dagster-sqlmesh/snapshot_timestamp": convert_unix_timestamp_to_readable(getattr(snapshot, "created_ts", None)) if snapshot else None,
                     "dagster-sqlmesh/model_name": asset_key.path[-1] if asset_key.path else None,
                 }
                 
