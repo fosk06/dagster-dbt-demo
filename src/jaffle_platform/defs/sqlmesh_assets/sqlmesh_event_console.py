@@ -9,6 +9,7 @@ from collections.abc import Callable, Iterator
 from sqlmesh.core.console import Console
 from sqlmesh.core.plan import EvaluatablePlan, PlanBuilder
 from sqlmesh.core.snapshot import Snapshot, SnapshotChangeCategory, SnapshotInfoLike
+from sqlmesh.core.snapshot.evaluator import SnapshotEvaluator
 from sqlmesh.core.model import Model
 
 logger = logging.getLogger(__name__)
@@ -268,6 +269,7 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
         self.audit_stats: dict[str, dict[str, int]] = {}
         self.plan_events: list[dict[str, t.Any]] = []
         self.evaluation_events: list[dict[str, t.Any]] = []
+        self.log_events: list[dict[str, t.Any]] = []
         
         print("🚀 SQLMeshEventCaptureConsole créée - Capture événementielle complète activée")
         
@@ -348,18 +350,22 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
             print(f"✅ AUDITS RESULTS: {event.num_audits_passed} passed, {event.num_audits_failed} failed")
             
             # Si on a des audits dans ce snapshot, on peut les capturer ici
-            if hasattr(event.snapshot, 'audits') and event.snapshot.audits:
-                for audit in event.snapshot.audits:
-                    audit_result = {
-                        'snapshot_name': event.snapshot.name,
-                        'audit_name': audit.name,
-                        'audit_query': audit.query,
+            if hasattr(event.snapshot, 'model') and hasattr(event.snapshot.model, 'audits') and event.snapshot.model.audits:
+                audit_results = [
+                    {
+                        'model_name': event.snapshot.model.name,
+                        'audit_name': audit_name,
+                        'audit_config': audit_config,
                         'batch_idx': event.batch_idx,
-                        'num_audits_passed': event.num_audits_passed,
-                        'num_audits_failed': event.num_audits_failed,
-                        'timestamp': t.cast(float, t.Any),
                     }
-                    self.audit_results.append(audit_result)
+                    for audit_name, audit_config in event.snapshot.model.audits
+                ]
+                self.audit_results.extend(audit_results)
+                
+                # Debug: afficher les audits capturés
+                print(f"🔍 AUDITS CAPTURÉS pour {event.snapshot.model.name}:")
+                for audit in audit_results:
+                    print(f"   - {audit['audit_name']}: {audit['audit_config']}")
 
     def _handle_stop_evaluation(self, event: StopEvaluationProgress) -> None:
         """Capture la fin de l'évaluation"""
@@ -377,6 +383,7 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
             'message': event.message,
             'timestamp': t.cast(float, t.Any),
         }
+        self.log_events.append(error_info)
 
     def _handle_log_failed_models(self, event: LogFailedModels) -> None:
         """Capture les modèles qui ont échoué"""
@@ -386,6 +393,7 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
                 'error': str(error),
                 'timestamp': t.cast(float, t.Any),
             }
+            self.log_events.append(error_info)
 
     def _handle_log_success(self, event: LogSuccess) -> None:
         """Capture les succès"""
@@ -394,6 +402,7 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
             'message': event.message,
             'timestamp': t.cast(float, t.Any),
         }
+        self.log_events.append(success_info)
 
     def get_audit_results(self) -> list[dict[str, t.Any]]:
         """Retourne tous les résultats d'audit capturés"""
@@ -413,6 +422,7 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
             'audit_results': self.audit_results,
             'evaluation_events': self.evaluation_events,
             'plan_events': self.plan_events,
+            'log_events': self.log_events,
         }
 
     def clear_events(self) -> None:
@@ -420,4 +430,5 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
         self.audit_results.clear()
         self.audit_stats.clear()
         self.plan_events.clear()
-        self.evaluation_events.clear() 
+        self.evaluation_events.clear()
+        self.log_events.clear() 
