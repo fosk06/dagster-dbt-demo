@@ -1,7 +1,7 @@
 MODEL (
   name sqlmesh_jaffle_platform.orders,
   kind FULL,
-  cron '@daily',
+  cron '*/5 * * * *',
   grain order_id,
   tags ["dagster:group_name:sqlmesh_datamarts"],
   partitioned_by = ["order_date"],

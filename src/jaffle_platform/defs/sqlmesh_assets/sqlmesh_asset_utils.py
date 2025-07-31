@@ -1,5 +1,6 @@
 # Utility functions for SQLMeshResource and Dagster integration
 
+from dagster import AssetSpec, AssetCheckSpec
 from sqlmesh.core.model.definition import ExternalModel
 from typing import Any, Optional
 import json
@@ -351,4 +352,121 @@ def get_all_external_asset_keys(context, translator, models) -> set:
         for dep_str in external_deps:
             asset_key = translator.get_external_asset_key(dep_str)
             external_keys.add(asset_key)
-    return external_keys 
+    return external_keys
+
+
+def get_model_audits_by_filter(context, model_names=None, audit_names=None):
+    """
+    Récupère les audits avec filtres.
+    
+    Args:
+        context: SQLMesh Context
+        model_names: Liste des noms de modèles à filtrer (optionnel)
+        audit_names: Liste des noms d'audits à filtrer (optionnel)
+    
+    Returns:
+        List of audit info dictionaries
+    """
+    all_audits = []
+    
+    for model_name, model in context.models.items():
+        # Filtrer par nom de modèle
+        if model_names and model_name not in model_names:
+            continue
+            
+        audits_with_args = model.audits_with_args if hasattr(model, 'audits_with_args') else []
+        
+        for audit_obj, audit_args in audits_with_args:
+            # Filtrer par nom d'audit
+            if audit_names and audit_obj.name not in audit_names:
+                continue
+                
+            audit_info = {
+                'model_name': model_name,
+                'audit_name': audit_obj.name,
+                'audit_query': str(audit_obj.query),
+                'audit_args': audit_args
+            }
+            all_audits.append(audit_info)
+    
+    return all_audits
+
+
+
+
+
+def create_all_asset_specs(
+    models,
+    translator,
+    context,
+    extra_keys,
+    kinds,
+    owners,
+    group_name
+) -> list[AssetSpec]:
+    """
+    Crée tous les AssetSpec pour tous les modèles SQLMesh.
+    
+    Args:
+        models: Liste des modèles SQLMesh
+        translator: SQLMeshTranslator
+        context: SQLMesh Context
+        extra_keys: Clés supplémentaires pour les métadonnées
+        kinds: Kinds des assets
+        owners: Propriétaires des assets
+        group_name: Nom du groupe par défaut
+    
+    Returns:
+        Liste de tous les AssetSpec
+    """
+    specs = []
+    for model in models:
+        asset_key = translator.get_asset_key(model)
+        code_version = str(getattr(model, "data_hash", "")) if hasattr(model, "data_hash") and getattr(model, "data_hash") else None
+        metadata = get_asset_metadata(translator, model, code_version, extra_keys, owners)
+        tags = get_asset_tags(translator, context, model)
+        deps = translator.get_model_deps_with_external(context, model)
+        final_group_name = translator.get_group_name_with_fallback(context, model, group_name)
+        
+        spec = AssetSpec(
+            key=asset_key,
+            deps=deps,
+            code_version=code_version,
+            metadata=metadata,
+            kinds=kinds,
+            tags=tags,
+            group_name=final_group_name,
+        )
+        specs.append(spec)
+    return specs
+
+
+def create_assets_and_checks(
+    models,
+    translator,
+    context,
+    extra_keys,
+    kinds,
+    owners,
+    group_name
+) -> tuple[list[AssetSpec], list[AssetCheckSpec]]:
+    """
+    Crée tous les AssetSpec et AssetCheckSpec en une seule fonction.
+    
+    Args:
+        models: Liste des modèles SQLMesh
+        translator: SQLMeshTranslator
+        context: SQLMesh Context
+        extra_keys: Clés supplémentaires pour les métadonnées
+        kinds: Kinds des assets
+        owners: Propriétaires des assets
+        group_name: Nom du groupe par défaut
+    
+    Returns:
+        Tuple (AssetSpecs, AssetCheckSpecs)
+    """
+    specs = create_all_asset_specs(
+        models, translator, context, extra_keys, kinds, owners, group_name
+    )
+    checks = create_all_asset_checks(models, translator)
+    return specs, checks 

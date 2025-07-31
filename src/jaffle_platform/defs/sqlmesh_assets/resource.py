@@ -88,6 +88,7 @@ class SQLMeshResource(ConfigurableResource):
     gateway: str = "postgres"
     allow_breaking_changes: bool = False
     concurrency_limit: int = 1
+    ignore_cron: bool = False
     
     # Attribut privé pour le logger Dagster (non soumis à l'immuabilité Pydantic)
     _logger: Any = PrivateAttr(default=None)
@@ -190,35 +191,34 @@ class SQLMeshResource(ConfigurableResource):
         try:
             plan = self.context.plan(
                 select_models=model_names,
-                auto_apply=True,
+                auto_apply=False, # never apply the plan, we will juste need it for metadata collection
                 no_prompts=True
             )
-            has_changes, breaking_changes_msg = has_breaking_changes_with_message(plan, self._logger, self.context)
-            if has_changes:
-                raise BreakingChangeError(breaking_changes_msg)
-            else:
-                self.context.run(
-                    ignore_cron=False,
-                    select_models=model_names,
-                    execution_time=datetime.datetime.now()
-                )
+            self.context.run(
+                ignore_cron=self.ignore_cron,
+                select_models=model_names,
+                execution_time=datetime.datetime.now(),
+            )
             return plan
 
-        except BreakingChangeError as e:
-            self._logger.error(f"Changement breaking détecté : {e.message}")
-            raise  # Re-raise pour que Dagster puisse gérer cette erreur spécifique
         except CircuitBreakerError:
             self._logger.error("Run interrompu : l'environnement a changé pendant l'exécution.")
+            raise
         except (PlanError, ConflictingPlanError, NoChangesPlanError, UncategorizedPlanError) as e:
             self._logger.error(f"Erreur de planification : {e}")
+            raise
         except (AuditError, NodeAuditsErrors) as e:
             self._logger.error(f"Erreur d'audit : {e}")
+            raise
         except (PythonModelEvalError, SignalEvalError) as e:
             self._logger.error(f"Erreur d'exécution de modèle ou de signal : {e}")
+            raise
         except SQLMeshError as e:
             self._logger.error(f"Erreur SQLMesh : {e}")
+            raise
         except Exception as e:
             self._logger.error(f"Erreur inattendue : {e}")
+            raise
 
     def materialize_assets_threaded(self, models, context=None):
         """

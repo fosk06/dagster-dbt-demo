@@ -21,7 +21,8 @@ sqlmesh_resource = SQLMeshResource(
     gateway="postgres",
     allow_breaking_changes=True,
     translator=SlingToSqlmeshTranslator(),
-    concurrency_limit=1
+    concurrency_limit=1,
+    ignore_cron=True  # only for testing purposes
 )
 
 # Configuration des assets SQLMesh avec support des external assets
