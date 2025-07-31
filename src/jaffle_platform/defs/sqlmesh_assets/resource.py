@@ -2,31 +2,42 @@ import threading
 import anyio
 import logging
 import datetime
-from typing import Any, Optional
+from typing import Any, Optional, List
 from dagster import (
     ConfigurableResource, 
     MaterializeResult, 
     DataVersion, 
+    AssetExecutionContext, 
+    AssetKey, 
+    AssetMaterialization, 
+    AssetObservation,
 )
 from sqlmesh import Context
-from sqlmesh.core.console import set_console, Verbosity
+from sqlmesh.core.console import set_console, Verbosity, Console
 from .translator import SQLMeshTranslator
 from .sqlmesh_asset_utils import (
     get_models_to_materialize,
     extract_plan_metadata,
     get_topologically_sorted_asset_keys,
     has_breaking_changes,
+    has_breaking_changes_with_message,
     format_partition_metadata,
     get_model_partitions_from_plan,
-    get_model_audits_from_plan,
 )
 from .sqlmesh_event_console import SQLMeshEventCaptureConsole
+from sqlmesh.core.model import Model
+from sqlmesh.core.plan import Plan
 from sqlmesh.utils.errors import (
     SQLMeshError,
     PlanError,
     ConflictingPlanError,
     NodeAuditsErrors,
     CircuitBreakerError,
+    NoChangesPlanError,
+    UncategorizedPlanError,
+    AuditError,
+    PythonModelEvalError,
+    SignalEvalError,
 )
 from sqlmesh.utils.concurrency import NodeExecutionFailedError
 import time
@@ -57,6 +68,13 @@ def convert_unix_timestamp_to_readable(timestamp):
 # Lock global pour le singleton de la console SQLMesh
 _console_lock = threading.Lock()
 
+class BreakingChangeError(Exception):
+    """Exception levée quand des changements breaking sont détectés dans SQLMesh."""
+    def __init__(self, message: str = "Breaking change detected, no materialization will be done"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class SQLMeshResource(ConfigurableResource):
     """
     Resource Dagster pour interagir avec SQLMesh.
@@ -81,6 +99,9 @@ class SQLMeshResource(ConfigurableResource):
             
         # Initialiser l'ID unique pour cette instance
         self._instance_id = id(self)
+        
+        # Créer la console SQLMesh dès l'initialisation
+        self._console = self._get_or_create_console()
 
     def __del__(self):
         pass  # Cleanup simplifié
@@ -101,7 +122,7 @@ class SQLMeshResource(ConfigurableResource):
             with _console_lock:
                 if cls._console_instance is None:  # Double-check pattern
                     cls._console_instance = SQLMeshEventCaptureConsole(
-                        # verbosity et ignore_warnings ne sont pas supportés par IntrospectingConsole
+                        log_override=logging.getLogger(__name__),
                     )
                     set_console(cls._console_instance)
         return cls._console_instance
@@ -145,67 +166,47 @@ class SQLMeshResource(ConfigurableResource):
         """
         Matérialise les assets SQLMesh spécifiés avec gestion d'erreurs robuste.
         """
-        import os
-        import time
-        
-        pid = os.getpid()
-        timestamp = time.strftime("%H:%M:%S")
         model_names = [model.name for model in models]
         
-        max_retries = 3
-        retry_count = 0
+        # S'assurer que notre console est active pour SQLMesh
+        set_console(self._console)
+        self._console.clear_events()
         
-        while retry_count < max_retries:
-            try:
-                plan = self.context.plan(
+        # Le logger est déjà configuré dans la console, pas besoin de le changer
+        try:
+            plan = self.context.plan(
+                select_models=model_names,
+                auto_apply=True,
+                no_prompts=True
+            )
+            has_changes, breaking_changes_msg = has_breaking_changes_with_message(plan, self.logger, self.context)
+            if has_changes:
+                raise BreakingChangeError(breaking_changes_msg)
+            else:
+                self.context.run(
+                    ignore_cron=False,
                     select_models=model_names,
-                    auto_apply=True
+                    execution_time=datetime.datetime.now()
                 )
-                
-                self.context.apply(plan)
-                
-                # Récupérer TOUS les événements capturés
-                console = self._get_or_create_console()
-                all_events = console.get_all_events()
-                
-                # Nettoyer les événements pour la prochaine materialization
-                console.clear_events()
-                
-                return plan
-                
-            except ConflictingPlanError as e:
-                retry_count += 1
-                print(f"❌ ConflictingPlanError détectée (tentative {retry_count}/{max_retries}): {e}")
-                
-                if retry_count < max_retries:
-                    print(f"⏳ Attendre {retry_count * 2} secondes pour laisser SQLMesh se stabiliser...")
-                    time.sleep(retry_count * 2)
-                    
-                    print(f"🔄 Retry: nettoyage + nouveau plan + apply...")
-                    
-                    # Essayer de nettoyer l'environnement
-                    try:
-                        self.context.invalidate_environment("prod", sync=True)
-                        print(f"✅ Environnement invalidé")
-                    except Exception as cleanup_error:
-                        print(f"⚠️ Échec du nettoyage: {cleanup_error}")
-                    
-                    continue
-                else:
-                    print(f"❌ Échec après {max_retries} tentatives")
-                    raise
-                    
-            except (PlanError, NodeExecutionFailedError, NodeAuditsErrors, CircuitBreakerError) as e:
-                print(f"❌ Erreur critique SQLMesh: {type(e).__name__}: {e}")
-                raise
-                
-            except SQLMeshError as e:
-                print(f"❌ SQLMeshError: {e}")
-                raise
-                
-            except Exception as e:
-                print(f"❌ Exception inattendue: {type(e).__name__}: {e}")
-                raise
+            self.logger.debug("Audit results:")
+            self.logger.debug(self._console.get_audit_results())
+            return plan
+
+        except BreakingChangeError as e:
+            self.logger.error(f"Changement breaking détecté : {e.message}")
+            raise  # Re-raise pour que Dagster puisse gérer cette erreur spécifique
+        except CircuitBreakerError:
+            self.logger.error("Run interrompu : l'environnement a changé pendant l'exécution.")
+        except (PlanError, ConflictingPlanError, NoChangesPlanError, UncategorizedPlanError) as e:
+            self.logger.error(f"Erreur de planification : {e}")
+        except (AuditError, NodeAuditsErrors) as e:
+            self.logger.error(f"Erreur d'audit : {e}")
+        except (PythonModelEvalError, SignalEvalError) as e:
+            self.logger.error(f"Erreur d'exécution de modèle ou de signal : {e}")
+        except SQLMeshError as e:
+            self.logger.error(f"Erreur SQLMesh : {e}")
+        except Exception as e:
+            self.logger.error(f"Erreur inattendue : {e}")
 
     def materialize_assets_threaded(self, models, context=None):
         """
@@ -252,7 +253,6 @@ class SQLMeshResource(ConfigurableResource):
             if snapshot:
                 snapshot_version = getattr(snapshot, "version", None)
                 model_partitions = get_model_partitions_from_plan(plan, self.translator, asset_key, snapshot)
-                model_audits = get_model_audits_from_plan(plan, self.translator, asset_key)
                 # Préparer les métadonnées de base
                 metadata = {
                     "dagster-sqlmesh/snapshot_version": snapshot_version,

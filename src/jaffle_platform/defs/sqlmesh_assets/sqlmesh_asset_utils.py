@@ -66,13 +66,6 @@ def get_assetkey_to_snapshot(context, translator) -> dict:
         assetkey_to_snapshot[asset_key] = snapshot
     return assetkey_to_snapshot
 
-def get_model_audits_from_plan(plan, translator, asset_key) -> dict:
-    """Retourne les audits pour un asset en utilisant le plan."""
-    # Convertir AssetKey vers le modèle SQLMesh
-    # snapshots = plan.snapshots.items()
-    # audit_snapshots = [snapshot for snapshot in snapshots if snapshot.is_audit]
-    return True
-
 def get_model_partitions_from_plan(plan, translator, asset_key, snapshot) -> dict:
     """Retourne les informations de partition pour un asset en utilisant le plan."""
     # Convertir AssetKey vers le modèle SQLMesh
@@ -183,6 +176,39 @@ def has_breaking_changes(plan, logger, context=None) -> bool:
             logger.info(info_msg)
 
     return has_changes 
+
+
+def has_breaking_changes_with_message(plan, logger, context=None) -> tuple[bool, str]:
+    """
+    Returns (True, message) if the given SQLMesh plan contains breaking changes
+    (any directly or indirectly modified models).
+    Logs the models concernés, using context.log if available.
+    """
+    directly_modified = getattr(plan, "directly_modified", set())
+    indirectly_modified = getattr(plan, "indirectly_modified", set())
+
+    directly = list(directly_modified)
+    indirectly = [item for sublist in indirectly_modified.values() for item in sublist]
+
+    has_changes = bool(directly or indirectly)
+
+    if has_changes:
+        msg = (
+            f"Breaking changes detected in plan {getattr(plan, 'plan_id', None)}! "
+            f"Directly modified models: {directly} | Indirectly modified models: {indirectly}"
+        )
+        if context and hasattr(context, "log"):
+            context.log.error(msg)
+        else:
+            logger.error(msg)
+        return True, msg
+    else:
+        info_msg = f"No breaking changes detected in plan {getattr(plan, 'plan_id', None)}."
+        if context and hasattr(context, "log"):
+            context.log.info(info_msg)
+        else:
+            logger.info(info_msg)
+        return False, info_msg
 
 
 def get_asset_kinds(translator, context) -> set:

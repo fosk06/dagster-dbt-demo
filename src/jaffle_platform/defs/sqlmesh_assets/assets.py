@@ -1,4 +1,4 @@
-from dagster import Definitions, RetryPolicy, AssetKey,Backoff
+from dagster import Definitions, RetryPolicy, AssetKey, Backoff
 from .decorators import sqlmesh_assets_factory
 from .resource import SQLMeshResource
 from .translator import SQLMeshTranslator

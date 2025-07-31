@@ -263,21 +263,37 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
     - Debug (logs, erreurs, succès)
     """
 
-    def __init__(self, logger=None, **kwargs):
-        super().__init__(logger, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.audit_results: list[dict[str, t.Any]] = []
         self.audit_stats: dict[str, dict[str, int]] = {}
         self.plan_events: list[dict[str, t.Any]] = []
         self.evaluation_events: list[dict[str, t.Any]] = []
         self.log_events: list[dict[str, t.Any]] = []
         
-        print("🚀 SQLMeshEventCaptureConsole créée - Capture événementielle complète activée")
+        # Logger contextuel qui peut être changé dynamiquement
+        self._context_logger = logger or logging.getLogger(__name__)
+        
+        self.context_logger.info("🚀 SQLMeshEventCaptureConsole créée - Capture événementielle complète activée")
         
         # Ajouter notre handler personnalisé
         self.add_handler(self._event_handler)
+    
+    @property
+    def context_logger(self):
+        """Retourne le logger contextuel actuel"""
+        return self._context_logger
+    
+    @context_logger.setter
+    def context_logger(self, logger):
+        """Permet de changer le logger contextuel dynamiquement"""
+        self._context_logger = logger
 
     def _event_handler(self, event: ConsoleEvent) -> None:
         """Handler principal qui capture TOUS les événements SQLMesh"""
+        
+        # Debug: afficher tous les événements reçus
+        self.context_logger.debug(f"🔍 EVENT RECEIVED: {event.__class__.__name__}")
         
         # Capture des événements de plan
         if isinstance(event, StartPlanEvaluation):
@@ -303,7 +319,16 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
         elif isinstance(event, LogSuccess):
             self._handle_log_success(event)
         
+        # Capture des logs de statut
+        elif isinstance(event, LogStatusUpdate):
+            self._handle_log_status_update(event)
+        
 
+
+    def _handle_log_status_update(self, event: LogStatusUpdate) -> None:
+        """Capture les logs de statut"""
+        self.context_logger.info(f"ℹ️ log_status_update: {repr(event.message)}")
+        
 
     def _handle_start_plan_evaluation(self, event: StartPlanEvaluation) -> None:
         """Capture le début d'un plan"""
@@ -334,6 +359,7 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
 
     def _handle_update_snapshot_evaluation(self, event: UpdateSnapshotEvaluationProgress) -> None:
         """Capture les mises à jour pendant l'évaluation (c'est ici que les audits se déclenchent !)"""
+        self.context_logger.debug(f"✅ _handle_update_snapshot_evaluation called")
         eval_info = {
             'event_type': 'update_snapshot_evaluation',
             'snapshot_name': event.snapshot.name,
@@ -341,31 +367,49 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
             'duration_ms': event.duration_ms,
             'num_audits_passed': event.num_audits_passed,
             'num_audits_failed': event.num_audits_failed,
-            'timestamp': t.cast(float, t.Any),
         }
         self.evaluation_events.append(eval_info)
         
         # Capture des résultats d'audit via les paramètres
         if event.num_audits_passed is not None or event.num_audits_failed is not None:
-            print(f"✅ AUDITS RESULTS: {event.num_audits_passed} passed, {event.num_audits_failed} failed")
+            self.context_logger.info(f"✅ AUDITS RESULTS: {event.num_audits_passed} passed, {event.num_audits_failed} failed")
             
             # Si on a des audits dans ce snapshot, on peut les capturer ici
-            if hasattr(event.snapshot, 'model') and hasattr(event.snapshot.model, 'audits') and event.snapshot.model.audits:
-                audit_results = [
-                    {
-                        'model_name': event.snapshot.model.name,
-                        'audit_name': audit_name,
-                        'audit_config': audit_config,
-                        'batch_idx': event.batch_idx,
-                    }
-                    for audit_name, audit_config in event.snapshot.model.audits
-                ]
-                self.audit_results.extend(audit_results)
+            if hasattr(event.snapshot, 'model') and hasattr(event.snapshot.model, 'audits_with_args') and event.snapshot.model.audits_with_args:
+                audit_results = []
+                for audit_obj, audit_args in event.snapshot.model.audits_with_args:
+                    try:
+                        audit_result = {
+                            'model_name': event.snapshot.model.name,
+                            'audit_details': self._extract_audit_details(audit_obj, audit_args),
+                            'batch_idx': event.batch_idx,
+                        }
+                        audit_results.append(audit_result)
+                    except Exception as e:
+                        self.context_logger.warning(f"⚠️ Erreur lors de la capture d'audit: {e}")
+                        continue
                 
-                # Debug: afficher les audits capturés
-                print(f"🔍 AUDITS CAPTURÉS pour {event.snapshot.model.name}:")
-                for audit in audit_results:
-                    print(f"   - {audit['audit_name']}: {audit['audit_config']}")
+                self.audit_results.extend(audit_results)
+
+    def _extract_audit_details(self, audit_obj, audit_args):
+        """Extrait toutes les informations utiles d'un audit"""
+        
+        try:
+            details = {
+                'name': getattr(audit_obj, 'name', 'unknown'),
+                'sql': str(audit_obj.query.sql()) if hasattr(audit_obj, 'query') else 'N/A',
+                'blocking': getattr(audit_obj, 'blocking', False),
+                'skip': getattr(audit_obj, 'skip', False),
+                'arguments': audit_args
+            }
+            return details
+        except Exception as e:
+            self.context_logger.warning(f"⚠️ Erreur lors de l'extraction des détails d'audit: {e}")
+            return {
+                'name': 'error',
+                'error': str(e),
+                'arguments': audit_args
+            }
 
     def _handle_stop_evaluation(self, event: StopEvaluationProgress) -> None:
         """Capture la fin de l'évaluation"""
