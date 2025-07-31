@@ -29,7 +29,7 @@ def create_asset_checks_from_model(model, asset_key: AssetKey) -> List[AssetChec
                 description=f"SQLMesh audit: {audit_obj.name}",
                 blocking=audit_obj.blocking,  # ← Ajouter le blocking depuis l'audit
                 metadata={
-                    "audit_query": str(audit_obj.query),
+                    "audit_query": str(audit_obj.query.sql()),
                     "audit_blocking": audit_obj.blocking,
                     "audit_dialect": audit_obj.dialect,
                     "audit_args": audit_args

@@ -1,10 +1,8 @@
-# Utility functions for SQLMeshResource and Dagster integration
-
 from dagster import AssetSpec, AssetCheckSpec
 from sqlmesh.core.model.definition import ExternalModel
-from typing import Any, Optional
-import json
+from typing import Any
 from datetime import datetime
+from .sqlmesh_asset_check_utils import create_all_asset_checks
 
 def extract_metadata(obj, fields: list[str], prefix: str = "sqlmesh_") -> dict:
     """
@@ -212,10 +210,12 @@ def has_breaking_changes_with_message(plan, logger, context=None) -> tuple[bool,
         return False, info_msg
 
 
-def get_asset_kinds(translator, context) -> set:
+def get_asset_kinds(sqlmesh_resource) -> set:
     """
     Retourne les kinds des assets avec le dialecte SQL.
     """
+    translator = sqlmesh_resource.translator
+    context = sqlmesh_resource.context
     dialect = translator._get_context_dialect(context)
     return {"sqlmesh", dialect}
 
@@ -318,11 +318,13 @@ def get_column_descriptions_from_model(model) -> dict:
     
     return column_descriptions
 
-def validate_external_dependencies(context, translator, models) -> list:
+def validate_external_dependencies(sqlmesh_resource, models) -> list:
     """
     Valide que tous les external dependencies peuvent être proprement mappés.
     Retourne une liste d'erreurs de validation.
     """
+    translator = sqlmesh_resource.translator
+    context = sqlmesh_resource.context
     errors = []
     for model in models:
         # Ignorer les external models dans la validation
@@ -338,10 +340,12 @@ def validate_external_dependencies(context, translator, models) -> list:
     return errors
 
 
-def get_all_external_asset_keys(context, translator, models) -> set:
+def get_all_external_asset_keys(sqlmesh_resource, models) -> set:
     """
     Retourne tous les external asset keys qui sont référencés par les modèles donnés.
     """
+    translator = sqlmesh_resource.translator
+    context = sqlmesh_resource.context
     external_keys = set()
     for model in models:
         # Ignorer les external models
@@ -397,8 +401,7 @@ def get_model_audits_by_filter(context, model_names=None, audit_names=None):
 
 def create_all_asset_specs(
     models,
-    translator,
-    context,
+    sqlmesh_resource,
     extra_keys,
     kinds,
     owners,
@@ -409,8 +412,7 @@ def create_all_asset_specs(
     
     Args:
         models: Liste des modèles SQLMesh
-        translator: SQLMeshTranslator
-        context: SQLMesh Context
+        sqlmesh_resource: SQLMeshResource
         extra_keys: Clés supplémentaires pour les métadonnées
         kinds: Kinds des assets
         owners: Propriétaires des assets
@@ -419,6 +421,8 @@ def create_all_asset_specs(
     Returns:
         Liste de tous les AssetSpec
     """
+    translator = sqlmesh_resource.translator
+    context = sqlmesh_resource.context
     specs = []
     for model in models:
         asset_key = translator.get_asset_key(model)
@@ -441,32 +445,51 @@ def create_all_asset_specs(
     return specs
 
 
-def create_assets_and_checks(
-    models,
-    translator,
-    context,
+def create_asset_specs(
+    sqlmesh_resource,
     extra_keys,
     kinds,
     owners,
     group_name
-) -> tuple[list[AssetSpec], list[AssetCheckSpec]]:
+) -> list[AssetSpec]:
     """
-    Crée tous les AssetSpec et AssetCheckSpec en une seule fonction.
+    Crée tous les AssetSpec pour tous les modèles SQLMesh.
     
     Args:
-        models: Liste des modèles SQLMesh
-        translator: SQLMeshTranslator
-        context: SQLMesh Context
+        sqlmesh_resource: SQLMeshResource
         extra_keys: Clés supplémentaires pour les métadonnées
         kinds: Kinds des assets
         owners: Propriétaires des assets
         group_name: Nom du groupe par défaut
     
     Returns:
-        Tuple (AssetSpecs, AssetCheckSpecs)
+        Liste de tous les AssetSpec
     """
-    specs = create_all_asset_specs(
-        models, translator, context, extra_keys, kinds, owners, group_name
-    )
-    checks = create_all_asset_checks(models, translator)
-    return specs, checks 
+    models = [model for model in sqlmesh_resource.get_models() if not isinstance(model, ExternalModel)]
+    return create_all_asset_specs(models, sqlmesh_resource, extra_keys, kinds, owners, group_name)
+
+
+def get_extra_keys() -> list[str]:
+    """
+    Retourne les clés supplémentaires pour les métadonnées des assets SQLMesh.
+    
+    Returns:
+        Liste des clés supplémentaires
+    """
+    return ["cron", "tags", "kind", "dialect", "query", "partitioned_by", "clustered_by"]
+
+
+def create_asset_checks(
+    sqlmesh_resource
+) -> list[AssetCheckSpec]:
+    """
+    Crée tous les AssetCheckSpec pour tous les modèles SQLMesh.
+    
+    Args:
+        sqlmesh_resource: SQLMeshResource
+    
+    Returns:
+        Liste de tous les AssetCheckSpec
+    """
+    models = [model for model in sqlmesh_resource.get_models() if not isinstance(model, ExternalModel)]
+    return create_all_asset_checks(models, sqlmesh_resource.translator) 

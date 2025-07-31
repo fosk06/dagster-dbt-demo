@@ -1,9 +1,9 @@
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from dagster import AssetKey
 from dagster._core.definitions.metadata import TableMetadataSet, TableSchema, TableColumn
 import json
-from typing import Optional, Any
+from typing import Optional
 from sqlmesh.core.model.definition import ExternalModel
 
 @dataclass

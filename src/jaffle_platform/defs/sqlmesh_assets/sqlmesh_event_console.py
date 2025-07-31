@@ -4,13 +4,10 @@ import textwrap
 import typing as t
 import uuid
 from dataclasses import dataclass, field
-from collections.abc import Callable, Iterator
 
 from sqlmesh.core.console import Console
-from sqlmesh.core.plan import EvaluatablePlan, PlanBuilder
-from sqlmesh.core.snapshot import Snapshot, SnapshotChangeCategory, SnapshotInfoLike
-from sqlmesh.core.snapshot.evaluator import SnapshotEvaluator
-from sqlmesh.core.model import Model
+from sqlmesh.core.plan import EvaluatablePlan
+from sqlmesh.core.snapshot import Snapshot
 
 logger = logging.getLogger(__name__)
 
