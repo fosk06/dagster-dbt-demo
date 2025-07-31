@@ -106,6 +106,7 @@ def sqlmesh_assets_factory(
         can_subset=True
     )
     def _sqlmesh_assets(context: AssetExecutionContext, sqlmesh: SQLMeshResource):
+
         yield from sqlmesh.materialize_all_assets(context)
 
     return _sqlmesh_assets 

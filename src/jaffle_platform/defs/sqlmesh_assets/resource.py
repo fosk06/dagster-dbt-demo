@@ -11,6 +11,8 @@ from dagster import (
     AssetKey, 
     AssetMaterialization, 
     AssetObservation,
+    get_dagster_logger,
+    InitResourceContext
 )
 from sqlmesh import Context
 from sqlmesh.core.console import set_console, Verbosity, Console
@@ -102,6 +104,8 @@ class SQLMeshResource(ConfigurableResource):
         
         # Créer la console SQLMesh dès l'initialisation
         self._console = self._get_or_create_console()
+        logger = get_dagster_logger("sqlmesh")
+        logger.info("🔧 SQLMeshResource initialisée avec console")
 
     def __del__(self):
         pass  # Cleanup simplifié
@@ -154,6 +158,14 @@ class SQLMeshResource(ConfigurableResource):
             self._translator_cache = getattr(self, '_translator_instance', None) or SQLMeshTranslator()
         return self._translator_cache
 
+    def setup_for_execution(self, context: InitResourceContext) -> None:
+        # Stocker le logger du contexte pour l'utiliser plus tard
+        self._dagster_logger = context.log
+        
+        # Configurer la console avec le logger Dagster
+        if hasattr(self, '_console') and self._console:
+            self._console._dagster_logger = self._dagster_logger
+
     def get_models(self):
         """
         Retourne tous les modèles SQLMesh. Cached pour les performances.
@@ -167,10 +179,13 @@ class SQLMeshResource(ConfigurableResource):
         Matérialise les assets SQLMesh spécifiés avec gestion d'erreurs robuste.
         """
         model_names = [model.name for model in models]
-        
+        self._dagster_logger.info("🔧🔧🔧🔧🔧🔧🔧🔧🔧🔧🔧materialize_assets....")
         # S'assurer que notre console est active pour SQLMesh
         set_console(self._console)
         self._console.clear_events()
+        
+        # Console configurée et prête
+        self.logger.info("🔧 Console SQLMesh configurée et active")
         
         # Le logger est déjà configuré dans la console, pas besoin de le changer
         try:
@@ -212,6 +227,7 @@ class SQLMeshResource(ConfigurableResource):
         """
         Wrapper synchrone pour Dagster qui utilise anyio.
         """
+
         def run_materialization():
             try:
                 return self.materialize_assets(models, context)
@@ -224,6 +240,7 @@ class SQLMeshResource(ConfigurableResource):
         """
         Matérialise tous les assets sélectionnés et yield les résultats.
         """
+
         selected_asset_keys = context.selected_asset_keys
         models_to_materialize = get_models_to_materialize(
             selected_asset_keys,

@@ -272,9 +272,12 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
         self.log_events: list[dict[str, t.Any]] = []
         
         # Logger contextuel qui peut être changé dynamiquement
-        self._context_logger = logger or logging.getLogger(__name__)
+        # Récupérer le log_override depuis les kwargs ou utiliser un logger par défaut
+        self._context_logger = kwargs.get('log_override') or logging.getLogger(__name__)
+        # S'assurer que le logger est en niveau INFO
+        self._context_logger.setLevel(logging.INFO)
         
-        self.context_logger.info("🚀 SQLMeshEventCaptureConsole créée - Capture événementielle complète activée")
+        print("🚀 SQLMeshEventCaptureConsole créée - Capture événementielle complète activée")
         
         # Ajouter notre handler personnalisé
         self.add_handler(self._event_handler)
@@ -327,7 +330,11 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
 
     def _handle_log_status_update(self, event: LogStatusUpdate) -> None:
         """Capture les logs de statut"""
-        self.context_logger.info(f"ℹ️ log_status_update: {repr(event.message)}")
+        # Utiliser le logger Dagster si disponible, sinon print
+        if hasattr(self, '_dagster_logger') and self._dagster_logger:
+            self._dagster_logger.info(f"ℹ️ SQLMesh: {event.message}")
+        else:
+            print(f"ℹ️ SQLMesh: {event.message}")
         
 
     def _handle_start_plan_evaluation(self, event: StartPlanEvaluation) -> None:
@@ -372,7 +379,7 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
         
         # Capture des résultats d'audit via les paramètres
         if event.num_audits_passed is not None or event.num_audits_failed is not None:
-            self.context_logger.info(f"✅ AUDITS RESULTS: {event.num_audits_passed} passed, {event.num_audits_failed} failed")
+            print(f"✅ AUDITS RESULTS: {event.num_audits_passed} passed, {event.num_audits_failed} failed")
             
             # Si on a des audits dans ce snapshot, on peut les capturer ici
             if hasattr(event.snapshot, 'model') and hasattr(event.snapshot.model, 'audits_with_args') and event.snapshot.model.audits_with_args:
@@ -386,7 +393,7 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
                         }
                         audit_results.append(audit_result)
                     except Exception as e:
-                        self.context_logger.warning(f"⚠️ Erreur lors de la capture d'audit: {e}")
+                        print(f"⚠️ Erreur lors de la capture d'audit: {e}")
                         continue
                 
                 self.audit_results.extend(audit_results)
@@ -404,7 +411,7 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
             }
             return details
         except Exception as e:
-            self.context_logger.warning(f"⚠️ Erreur lors de l'extraction des détails d'audit: {e}")
+            print(f"⚠️ Erreur lors de l'extraction des détails d'audit: {e}")
             return {
                 'name': 'error',
                 'error': str(e),
