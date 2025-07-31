@@ -3,6 +3,7 @@ import anyio
 import logging
 import datetime
 from typing import Any, Optional, List
+from pydantic import PrivateAttr
 from dagster import (
     ConfigurableResource, 
     MaterializeResult, 
@@ -88,6 +89,9 @@ class SQLMeshResource(ConfigurableResource):
     allow_breaking_changes: bool = False
     concurrency_limit: int = 1
     
+    # Attribut privé pour le logger Dagster (non soumis à l'immuabilité Pydantic)
+    _logger: Any = PrivateAttr(default=None)
+    
     # Singleton pour la console SQLMesh (initialisé de manière lazy)
     
     def __init__(self, **kwargs):
@@ -139,7 +143,7 @@ class SQLMeshResource(ConfigurableResource):
         if not hasattr(self, '_context_cache'):
             # Configurer la console custom avant de créer le contexte
             console = self._get_or_create_console()
-            console.logger = self.logger  # Mettre à jour le logger
+            console._dagster_logger = self._logger  # Mettre à jour le logger
             
             self._context_cache = Context(
                 paths=self.project_dir,
@@ -159,12 +163,12 @@ class SQLMeshResource(ConfigurableResource):
         return self._translator_cache
 
     def setup_for_execution(self, context: InitResourceContext) -> None:
-        # Stocker le logger du contexte pour l'utiliser plus tard
-        self._dagster_logger = context.log
+        # Stocker le logger Dagster dans l'attribut privé
+        self._logger = context.log
         
         # Configurer la console avec le logger Dagster
         if hasattr(self, '_console') and self._console:
-            self._console._dagster_logger = self._dagster_logger
+            self._console._dagster_logger = self._logger
 
     def get_models(self):
         """
@@ -179,22 +183,17 @@ class SQLMeshResource(ConfigurableResource):
         Matérialise les assets SQLMesh spécifiés avec gestion d'erreurs robuste.
         """
         model_names = [model.name for model in models]
-        self._dagster_logger.info("🔧🔧🔧🔧🔧🔧🔧🔧🔧🔧🔧materialize_assets....")
         # S'assurer que notre console est active pour SQLMesh
         set_console(self._console)
         self._console.clear_events()
         
-        # Console configurée et prête
-        self.logger.info("🔧 Console SQLMesh configurée et active")
-        
-        # Le logger est déjà configuré dans la console, pas besoin de le changer
         try:
             plan = self.context.plan(
                 select_models=model_names,
                 auto_apply=True,
                 no_prompts=True
             )
-            has_changes, breaking_changes_msg = has_breaking_changes_with_message(plan, self.logger, self.context)
+            has_changes, breaking_changes_msg = has_breaking_changes_with_message(plan, self._logger, self.context)
             if has_changes:
                 raise BreakingChangeError(breaking_changes_msg)
             else:
@@ -203,25 +202,23 @@ class SQLMeshResource(ConfigurableResource):
                     select_models=model_names,
                     execution_time=datetime.datetime.now()
                 )
-            self.logger.debug("Audit results:")
-            self.logger.debug(self._console.get_audit_results())
             return plan
 
         except BreakingChangeError as e:
-            self.logger.error(f"Changement breaking détecté : {e.message}")
+            self._logger.error(f"Changement breaking détecté : {e.message}")
             raise  # Re-raise pour que Dagster puisse gérer cette erreur spécifique
         except CircuitBreakerError:
-            self.logger.error("Run interrompu : l'environnement a changé pendant l'exécution.")
+            self._logger.error("Run interrompu : l'environnement a changé pendant l'exécution.")
         except (PlanError, ConflictingPlanError, NoChangesPlanError, UncategorizedPlanError) as e:
-            self.logger.error(f"Erreur de planification : {e}")
+            self._logger.error(f"Erreur de planification : {e}")
         except (AuditError, NodeAuditsErrors) as e:
-            self.logger.error(f"Erreur d'audit : {e}")
+            self._logger.error(f"Erreur d'audit : {e}")
         except (PythonModelEvalError, SignalEvalError) as e:
-            self.logger.error(f"Erreur d'exécution de modèle ou de signal : {e}")
+            self._logger.error(f"Erreur d'exécution de modèle ou de signal : {e}")
         except SQLMeshError as e:
-            self.logger.error(f"Erreur SQLMesh : {e}")
+            self._logger.error(f"Erreur SQLMesh : {e}")
         except Exception as e:
-            self.logger.error(f"Erreur inattendue : {e}")
+            self._logger.error(f"Erreur inattendue : {e}")
 
     def materialize_assets_threaded(self, models, context=None):
         """
@@ -232,7 +229,7 @@ class SQLMeshResource(ConfigurableResource):
             try:
                 return self.materialize_assets(models, context)
             except Exception as e:
-                self.logger.error(f"Materialization failed: {e}")
+                self._logger.error(f"Materialization failed: {e}")
                 raise
         return anyio.run(anyio.to_thread.run_sync, run_materialization)
 
@@ -250,7 +247,6 @@ class SQLMeshResource(ConfigurableResource):
         
         # Créer et appliquer le plan
         plan = self.materialize_assets_threaded(models_to_materialize, context=context)
-        plan_metadata = extract_plan_metadata(plan)
         
         # Extraire les snapshots catégorisés directement depuis le plan
         assetkey_to_snapshot = {}

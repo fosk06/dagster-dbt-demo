@@ -277,7 +277,7 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
         # S'assurer que le logger est en niveau INFO
         self._context_logger.setLevel(logging.INFO)
         
-        print("🚀 SQLMeshEventCaptureConsole créée - Capture événementielle complète activée")
+        # Console initialisée et prête
         
         # Ajouter notre handler personnalisé
         self.add_handler(self._event_handler)
@@ -330,11 +330,9 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
 
     def _handle_log_status_update(self, event: LogStatusUpdate) -> None:
         """Capture les logs de statut"""
-        # Utiliser le logger Dagster si disponible, sinon print
+        # Utiliser le logger Dagster si disponible
         if hasattr(self, '_dagster_logger') and self._dagster_logger:
             self._dagster_logger.info(f"ℹ️ SQLMesh: {event.message}")
-        else:
-            print(f"ℹ️ SQLMesh: {event.message}")
         
 
     def _handle_start_plan_evaluation(self, event: StartPlanEvaluation) -> None:
@@ -379,7 +377,8 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
         
         # Capture des résultats d'audit via les paramètres
         if event.num_audits_passed is not None or event.num_audits_failed is not None:
-            print(f"✅ AUDITS RESULTS: {event.num_audits_passed} passed, {event.num_audits_failed} failed")
+            if hasattr(self, '_dagster_logger') and self._dagster_logger:
+                self._dagster_logger.info(f"✅ AUDITS RESULTS: {event.num_audits_passed} passed, {event.num_audits_failed} failed")
             
             # Si on a des audits dans ce snapshot, on peut les capturer ici
             if hasattr(event.snapshot, 'model') and hasattr(event.snapshot.model, 'audits_with_args') and event.snapshot.model.audits_with_args:
@@ -393,7 +392,8 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
                         }
                         audit_results.append(audit_result)
                     except Exception as e:
-                        print(f"⚠️ Erreur lors de la capture d'audit: {e}")
+                        if hasattr(self, '_dagster_logger') and self._dagster_logger:
+                            self._dagster_logger.warning(f"⚠️ Erreur lors de la capture d'audit: {e}")
                         continue
                 
                 self.audit_results.extend(audit_results)
@@ -411,7 +411,8 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
             }
             return details
         except Exception as e:
-            print(f"⚠️ Erreur lors de l'extraction des détails d'audit: {e}")
+            if hasattr(self, '_dagster_logger') and self._dagster_logger:
+                self._dagster_logger.warning(f"⚠️ Erreur lors de l'extraction des détails d'audit: {e}")
             return {
                 'name': 'error',
                 'error': str(e),
