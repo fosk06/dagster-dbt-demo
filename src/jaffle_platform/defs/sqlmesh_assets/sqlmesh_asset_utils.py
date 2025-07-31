@@ -318,6 +318,32 @@ def get_column_descriptions_from_model(model) -> dict:
     
     return column_descriptions
 
+
+def safe_extract_audit_query(model, audit_obj, audit_args, logger=None):
+    """
+    Extrait la query d'audit de manière sécurisée avec fallback.
+    
+    Args:
+        model: Modèle SQLMesh
+        audit_obj: Objet d'audit SQLMesh
+        audit_args: Arguments de l'audit
+        logger: Logger optionnel pour les warnings
+    
+    Returns:
+        str: La query SQL ou "N/A" si extraction échoue
+    """
+    try:
+        return model.render_audit_query(audit_obj, **audit_args).sql()
+    except Exception as e:
+        if logger:
+            logger.warning(f"⚠️ Erreur lors du rendu de la query d'audit: {e}")
+        try:
+            return audit_obj.query.sql()
+        except Exception as e2:
+            if logger:
+                logger.warning(f"⚠️ Erreur lors de l'extraction de la query de base: {e2}")
+            return "N/A"
+
 def validate_external_dependencies(sqlmesh_resource, models) -> list:
     """
     Valide que tous les external dependencies peuvent être proprement mappés.

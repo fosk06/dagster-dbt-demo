@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from sqlmesh.core.console import Console
 from sqlmesh.core.plan import EvaluatablePlan
 from sqlmesh.core.snapshot import Snapshot
+from .sqlmesh_asset_utils import safe_extract_audit_query
 
 logger = logging.getLogger(__name__)
 
@@ -388,38 +389,35 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
                         
                         audit_result = {
                             'model_name': event.snapshot.model.name,
-                            'asset_key': asset_key,  # ← Utilise le translator existant
-                            'audit_details': self._extract_audit_details(audit_obj, audit_args),
+                            'asset_key': asset_key,
+                            'audit_details': self._extract_audit_details(audit_obj, audit_args, event.snapshot.model),
                             'batch_idx': event.batch_idx,
                         }
                         audit_results.append(audit_result)
                     except Exception as e:
-                        if hasattr(self, '_dagster_logger') and self._dagster_logger:
-                            self._dagster_logger.warning(f"⚠️ Erreur lors de la capture d'audit: {e}")
+                        self._dagster_logger.warning(f"⚠️ Erreur lors de la capture d'audit: {e}")
                         continue
                 
                 self.audit_results.extend(audit_results)
 
-    def _extract_audit_details(self, audit_obj, audit_args):
+    def _extract_audit_details(self, audit_obj, audit_args, model):
         """Extrait toutes les informations utiles d'un audit"""
         
-        try:
-            details = {
-                'name': getattr(audit_obj, 'name', 'unknown'),
-                'sql': str(audit_obj.query.sql()) if hasattr(audit_obj, 'query') else 'N/A',
-                'blocking': getattr(audit_obj, 'blocking', False),
-                'skip': getattr(audit_obj, 'skip', False),
-                'arguments': audit_args
-            }
-            return details
-        except Exception as e:
-            if hasattr(self, '_dagster_logger') and self._dagster_logger:
-                self._dagster_logger.warning(f"⚠️ Erreur lors de l'extraction des détails d'audit: {e}")
-            return {
-                'name': 'error',
-                'error': str(e),
-                'arguments': audit_args
-            }
+        # Utiliser la fonction utilitaire
+        sql_query = safe_extract_audit_query(
+            model=model,
+            audit_obj=audit_obj,
+            audit_args=audit_args,
+            logger=self._dagster_logger if hasattr(self, '_dagster_logger') else None
+        )
+        
+        return {
+            'name': getattr(audit_obj, 'name', 'unknown'),
+            'sql': sql_query,
+            'blocking': getattr(audit_obj, 'blocking', False),
+            'skip': getattr(audit_obj, 'skip', False),
+            'arguments': audit_args
+        }
 
     def _handle_stop_evaluation(self, event: StopEvaluationProgress) -> None:
         """Capture la fin de l'évaluation"""
