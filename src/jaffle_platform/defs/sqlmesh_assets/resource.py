@@ -12,6 +12,7 @@ from dagster import (
     AssetKey, 
     AssetMaterialization, 
     AssetObservation,
+    AssetCheckResult,
     get_dagster_logger,
     InitResourceContext
 )
@@ -109,6 +110,11 @@ class SQLMeshResource(ConfigurableResource):
         
         # Créer la console SQLMesh dès l'initialisation
         self._console = self._get_or_create_console()
+        
+        # Configurer le translator dans la console après sa création
+        if hasattr(self, '_translator_instance') and self._translator_instance:
+            self._console._translator = self._translator_instance
+        
         logger = get_dagster_logger("sqlmesh")
         logger.info("🔧 SQLMeshResource initialisée avec console")
 
@@ -178,6 +184,31 @@ class SQLMeshResource(ConfigurableResource):
         if not hasattr(self, '_models_cache'):
             self._models_cache = list(self.context.models.values())
         return self._models_cache
+
+    def _serialize_audit_args(self, audit_args):
+        """
+        Sérialise les arguments d'audit en format JSON-compatible.
+        """
+        if not audit_args:
+            return {}
+        
+        serialized = {}
+        for key, value in audit_args.items():
+            try:
+                # Essayer de convertir en string si c'est un objet complexe
+                if hasattr(value, '__str__'):
+                    serialized[key] = str(value)
+                elif hasattr(value, '__dict__'):
+                    # Pour les objets avec __dict__, extraire les attributs principaux
+                    serialized[key] = {k: str(v) for k, v in value.__dict__.items() if not k.startswith('_')}
+                else:
+                    # Fallback: conversion directe
+                    serialized[key] = str(value)
+            except Exception:
+                # En cas d'erreur, utiliser une représentation simple
+                serialized[key] = f"<non-serializable: {type(value).__name__}>"
+        
+        return serialized
 
     def materialize_assets(self, models, context=None):
         """
@@ -282,3 +313,28 @@ class SQLMeshResource(ConfigurableResource):
                     metadata=metadata,
                     data_version=DataVersion(str(snapshot_version)) if snapshot_version else None
                 )
+        
+        # Émettre les AssetCheckResult après tous les MaterializeResult
+        audit_results = self._console.get_audit_results()
+        for audit_result in audit_results:
+            audit_details = audit_result['audit_details']
+            asset_key = audit_result['asset_key']
+            
+            # Déterminer si l'audit a passé (pour l'instant on assume True, on affinera plus tard)
+            passed = True  # TODO: déterminer le vrai statut basé sur les événements
+            
+            # Sérialiser les arguments d'audit en format JSON-compatible
+            serialized_args = self._serialize_audit_args(audit_details['arguments'])
+            
+            yield AssetCheckResult(
+                passed=passed,
+                asset_key=asset_key,
+                check_name=audit_details['name'],
+                metadata={
+                    "sqlmesh_model_name": audit_result['model_name'],  # ← Nom du modèle SQLMesh
+                    "audit_query": audit_details['sql'],
+                    "audit_blocking": audit_details['blocking'],
+                    "audit_dialect": getattr(audit_details, 'dialect', 'unknown'),
+                    "audit_args": serialized_args
+                }
+            )

@@ -260,8 +260,9 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
     - Debug (logs, erreurs, succès)
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, translator=None, **kwargs):
         super().__init__(**kwargs)
+        self._translator = translator  # ← Ajouter le translator
         self.audit_results: list[dict[str, t.Any]] = []
         self.audit_stats: dict[str, dict[str, int]] = {}
         self.plan_events: list[dict[str, t.Any]] = []
@@ -382,8 +383,12 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
                 audit_results = []
                 for audit_obj, audit_args in event.snapshot.model.audits_with_args:
                     try:
+                        # Utiliser le translator existant pour obtenir l'asset_key
+                        asset_key = self._translator.get_asset_key(event.snapshot.model) if self._translator else None
+                        
                         audit_result = {
                             'model_name': event.snapshot.model.name,
+                            'asset_key': asset_key,  # ← Utilise le translator existant
                             'audit_details': self._extract_audit_details(audit_obj, audit_args),
                             'batch_idx': event.batch_idx,
                         }
@@ -481,3 +486,5 @@ class SQLMeshEventCaptureConsole(IntrospectingConsole):
         self.plan_events.clear()
         self.evaluation_events.clear()
         self.log_events.clear() 
+
+ 
