@@ -1,10 +1,10 @@
 from dagster import (
-    AssetSpec,
-    AssetCheckSpec,
     multi_asset,
     AssetExecutionContext,
     RetryPolicy,
     schedule,
+    define_asset_job,
+    RunRequest
 )
 from .resource import SQLMeshResource
 from .sqlmesh_asset_utils import (
@@ -72,6 +72,7 @@ def sqlmesh_assets_factory(
 def sqlmesh_adaptive_schedule_factory(
     *,
     sqlmesh_resource: SQLMeshResource,
+    sqlmesh_job,
     name: str = "sqlmesh_adaptive_schedule",
 ):
     """
@@ -79,6 +80,7 @@ def sqlmesh_adaptive_schedule_factory(
     
     Args:
         sqlmesh_resource: La resource SQLMesh configurée
+        sqlmesh_job: Le job SQLMesh à exécuter
         name: Nom du schedule
     """
     
@@ -86,7 +88,7 @@ def sqlmesh_adaptive_schedule_factory(
     recommended_schedule = sqlmesh_resource.get_recommended_schedule()
     
     @schedule(
-        job=sqlmesh_assets_factory(sqlmesh_resource=sqlmesh_resource),
+        job=sqlmesh_job,
         cron_schedule=recommended_schedule,
         name=name,
         description=f"Schedule adaptatif basé sur les crons SQLMesh (granularité: {recommended_schedule})"
@@ -106,5 +108,10 @@ def sqlmesh_adaptive_schedule_factory(
         
         context.log.info(f"✅ Schedule adaptatif exécuté avec granularité: {recommended_schedule}")
         context.log.debug(f"📊 Modèles analysés: {len(sqlmesh_resource.get_models())} modèles")
+        # Retourner un RunRequest pour déclencher le job Dagster
+        return RunRequest(
+            run_key=f"sqlmesh_adaptive_{datetime.datetime.now().isoformat()}",
+            tags={"schedule": "sqlmesh_adaptive", "granularity": recommended_schedule}
+        )
     
     return _sqlmesh_adaptive_schedule 

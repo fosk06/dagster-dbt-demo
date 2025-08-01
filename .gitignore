@@ -83,3 +83,4 @@ sqlmesh_project/.cache/
 logs/
 .telemetry
 storage
+src/jaffle_platform/defs/__pycache__/

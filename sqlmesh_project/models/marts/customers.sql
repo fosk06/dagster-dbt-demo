@@ -2,7 +2,7 @@ MODEL (
   name sqlmesh_jaffle_platform.customers,
   kind FULL,
   tags ARRAY["dagster:group_name:sqlmesh_datamarts"],
-  cron '@daily',
+  cron '*/10 * * * *',
   grain customer_id
 );
 

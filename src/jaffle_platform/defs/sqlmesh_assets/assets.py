@@ -1,5 +1,5 @@
-from dagster import Definitions, RetryPolicy, AssetKey, Backoff
-from .decorators import sqlmesh_assets_factory
+from dagster import Definitions, RetryPolicy, AssetKey, Backoff, define_asset_job
+from .decorators import sqlmesh_assets_factory, sqlmesh_adaptive_schedule_factory
 from .resource import SQLMeshResource
 from .translator import SQLMeshTranslator
 
@@ -25,6 +25,9 @@ sqlmesh_resource = SQLMeshResource(
     ignore_cron=True  # only for testing purposes
 )
 
+# Retry policy commune pour tous les assets et jobs SQLMesh
+sqlmesh_retry_policy = RetryPolicy(max_retries=1, delay=30.0, backoff=Backoff.EXPONENTIAL)
+
 # Configuration des assets SQLMesh avec support des external assets
 # Les external assets (comme vos assets Sling) seront automatiquement détectés
 # et mappés selon la logique dans le translator
@@ -33,11 +36,25 @@ sqlmesh_assets = sqlmesh_assets_factory(
     name="sqlmesh_multi_asset",
     group_name="sqlmesh",
     op_tags={"team": "data", "env": "prod"},
-    retry_policy=RetryPolicy(max_retries=1, delay=30.0, backoff= Backoff.EXPONENTIAL),
+    retry_policy=sqlmesh_retry_policy,
+)
+
+# Job SQLMesh pour le schedule
+sqlmesh_job = define_asset_job(
+    name="sqlmesh_job",
+    selection=[sqlmesh_assets],
+)
+
+# Schedule adaptatif basé sur la granularité la plus fine des modèles SQLMesh
+sqlmesh_adaptive_schedule = sqlmesh_adaptive_schedule_factory(
+    sqlmesh_resource=sqlmesh_resource,
+    sqlmesh_job=sqlmesh_job
 )
 
 defs = Definitions(
     assets=[sqlmesh_assets],
+    jobs=[sqlmesh_job],
+    schedules=[sqlmesh_adaptive_schedule],
     resources={
         "sqlmesh": sqlmesh_resource,
     },
