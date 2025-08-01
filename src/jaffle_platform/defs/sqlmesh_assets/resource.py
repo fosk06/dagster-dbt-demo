@@ -88,7 +88,6 @@ class SQLMeshResource(ConfigurableResource):
     
     project_dir: str
     gateway: str = "postgres"
-    allow_breaking_changes: bool = False
     concurrency_limit: int = 1
     ignore_cron: bool = False
     
