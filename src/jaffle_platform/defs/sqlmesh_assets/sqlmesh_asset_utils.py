@@ -59,32 +59,6 @@ def get_model_partitions_from_plan(plan, translator, asset_key, snapshot) -> dic
     return {"partitioned_by": [], "intervals": []}
 
 
-def get_model_partitions(context, translator, asset_key, snapshot) -> dict:
-    """Retourne les informations de partition pour un asset."""
-    # Convertir AssetKey vers le modèle SQLMesh
-    model = get_model_from_asset_key(context, translator, asset_key)
-    
-    if model:
-        partitioned_by = getattr(model, "partitioned_by", [])
-        # Extraire les noms des colonnes de partition
-        partition_columns = [col.name for col in partitioned_by] if partitioned_by else []
-        
-        # Utiliser les intervals du snapshot (qui sera catégorisé après le plan + apply)
-        intervals = getattr(snapshot, "intervals", [])
-        grain = getattr(model, "grain", [])
-        is_partitioned = len(partition_columns) > 0
-        
-        return {
-            "partitioned_by": partition_columns, 
-            "intervals": intervals, 
-            "partition_columns": partition_columns, 
-            "grain": grain, 
-            "is_partitioned": is_partitioned
-        }
-    
-    return {"partitioned_by": [], "intervals": []}
-
-
 def get_model_from_asset_key(context, translator, asset_key) -> Any:
     """Convertit un AssetKey Dagster vers le modèle SQLMesh correspondant."""
     # Utiliser le mapping inverse du translator
@@ -395,66 +369,6 @@ def validate_external_dependencies(sqlmesh_resource, models) -> list:
             except Exception as e:
                 errors.append(f"Failed to map external dependency '{dep_str}' for model '{model.name}': {e}")
     return errors
-
-
-def get_all_external_asset_keys(sqlmesh_resource, models) -> set:
-    """
-    Retourne tous les external asset keys qui sont référencés par les modèles donnés.
-    """
-    translator = sqlmesh_resource.translator
-    context = sqlmesh_resource.context
-    external_keys = set()
-    for model in models:
-        # Ignorer les external models
-        if isinstance(model, ExternalModel):
-            continue
-            
-        external_deps = translator.get_external_dependencies(context, model)
-        for dep_str in external_deps:
-            asset_key = translator.get_external_asset_key(dep_str)
-            external_keys.add(asset_key)
-    return external_keys
-
-
-def get_model_audits_by_filter(context, model_names=None, audit_names=None):
-    """
-    Récupère les audits avec filtres.
-    
-    Args:
-        context: SQLMesh Context
-        model_names: Liste des noms de modèles à filtrer (optionnel)
-        audit_names: Liste des noms d'audits à filtrer (optionnel)
-    
-    Returns:
-        List of audit info dictionaries
-    """
-    all_audits = []
-    
-    for model_name, model in context.models.items():
-        # Filtrer par nom de modèle
-        if model_names and model_name not in model_names:
-            continue
-            
-        audits_with_args = model.audits_with_args if hasattr(model, 'audits_with_args') else []
-        
-        for audit_obj, audit_args in audits_with_args:
-            # Filtrer par nom d'audit
-            if audit_names and audit_obj.name not in audit_names:
-                continue
-                
-            audit_info = {
-                'model_name': model_name,
-                'audit_name': audit_obj.name,
-                'audit_query': str(audit_obj.query),
-                'audit_args': audit_args
-            }
-            all_audits.append(audit_info)
-    
-    return all_audits
-
-
-
-
 
 def create_all_asset_specs(
     models,

@@ -124,20 +124,6 @@ class SQLMeshTranslator:
         """Découpe un FQN en segments (catalog, schema, name)."""
         return [self.normalize_segment(s) for s in fqn.split(".")]
 
-    def get_group_name(self, context, model) -> str:
-        """
-        Détermine le group_name pour un modèle.
-        Peut être override pour un mapping custom.
-        Priorité : tag > factory > fallback
-        """
-        # Vérifier les tags SQLMesh pour les propriétés Dagster
-        dagster_property = self._get_dagster_property_from_tags(model, "group_name")
-        if dagster_property:
-            return dagster_property
-        
-        # Si pas de tag, retourner None pour utiliser la valeur de la factory
-        return None
-
     def get_group_name_with_fallback(self, context, model, factory_group_name: str) -> str:
         """
         Détermine le group_name avec fallback vers la factory.

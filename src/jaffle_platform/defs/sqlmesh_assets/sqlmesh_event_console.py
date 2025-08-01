@@ -142,7 +142,7 @@ class IntrospectingConsole(Console):
             # Convertir snake_case en camelCase
             camel_case_method_name = "".join(
                 word.capitalize()
-                for i, word in enumerate(method_name.split("_"))
+                for _, word in enumerate(method_name.split("_"))
             )
 
             if camel_case_method_name in known_events:
