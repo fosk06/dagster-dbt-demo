@@ -2,36 +2,27 @@ import threading
 import anyio
 import logging
 import datetime
-from typing import Any, Optional, List
+from typing import Any
 from pydantic import PrivateAttr
 from dagster import (
     ConfigurableResource, 
     MaterializeResult, 
     DataVersion, 
-    AssetExecutionContext, 
-    AssetKey, 
-    AssetMaterialization, 
-    AssetObservation,
     AssetCheckResult,
     get_dagster_logger,
     InitResourceContext
 )
 from sqlmesh import Context
-from sqlmesh.core.console import set_console, Verbosity, Console
+from sqlmesh.core.console import set_console
 from .translator import SQLMeshTranslator
 from .sqlmesh_asset_utils import (
     get_models_to_materialize,
-    extract_plan_metadata,
     get_topologically_sorted_asset_keys,
-    has_breaking_changes,
-    has_breaking_changes_with_message,
     format_partition_metadata,
     get_model_partitions_from_plan,
     analyze_sqlmesh_crons_using_api,
 )
 from .sqlmesh_event_console import SQLMeshEventCaptureConsole
-from sqlmesh.core.model import Model
-from sqlmesh.core.plan import Plan
 from sqlmesh.utils.errors import (
     SQLMeshError,
     PlanError,
@@ -44,8 +35,6 @@ from sqlmesh.utils.errors import (
     PythonModelEvalError,
     SignalEvalError,
 )
-from sqlmesh.utils.concurrency import NodeExecutionFailedError
-import time
 
 def convert_unix_timestamp_to_readable(timestamp):
     """
@@ -73,12 +62,6 @@ def convert_unix_timestamp_to_readable(timestamp):
 # Lock global pour le singleton de la console SQLMesh
 _console_lock = threading.Lock()
 
-class BreakingChangeError(Exception):
-    """Exception levée quand des changements breaking sont détectés dans SQLMesh."""
-    def __init__(self, message: str = "Breaking change detected, no materialization will be done"):
-        self.message = message
-        super().__init__(self.message)
-
 
 class SQLMeshResource(ConfigurableResource):
     """
@@ -105,9 +88,6 @@ class SQLMeshResource(ConfigurableResource):
         if translator:
             self._translator_instance = translator
             
-        # Initialiser l'ID unique pour cette instance
-        self._instance_id = id(self)
-        
         # Créer la console SQLMesh dès l'initialisation
         self._console = self._get_or_create_console()
         

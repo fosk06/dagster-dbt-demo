@@ -1,7 +1,7 @@
 # Utility functions for SQLMesh AssetCheckSpec creation
 
 from dagster import AssetCheckSpec, AssetKey
-from typing import List, Dict, Any
+from typing import List
 from sqlmesh.core.model.definition import ExternalModel
 
 

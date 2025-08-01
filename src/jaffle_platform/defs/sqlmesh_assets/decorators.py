@@ -4,23 +4,16 @@ from dagster import (
     RetryPolicy,
     schedule,
     define_asset_job,
-    RunRequest
+    RunRequest,
+    Definitions,
 )
 from .resource import SQLMeshResource
 from .sqlmesh_asset_utils import (
-    get_assetkey_to_snapshot,
     get_asset_kinds,
-    get_asset_tags,
-    get_asset_metadata,
-    validate_external_dependencies,
-    get_all_external_asset_keys,
-    get_model_partitions,
     get_extra_keys,
     create_asset_specs,
     create_asset_checks,
 )
-from typing import Any, Optional
-from sqlmesh.core.model.definition import ExternalModel
 import datetime
 from .translator import SQLMeshTranslator
 
@@ -52,7 +45,6 @@ def sqlmesh_assets_factory(
     # Créer les AssetSpec et AssetCheckSpec
     specs = create_asset_specs(sqlmesh_resource, extra_keys, kinds, owners, group_name)
     asset_checks = create_asset_checks(sqlmesh_resource)
-    schedule = sqlmesh_resource.get_recommended_schedule()
 
     @multi_asset(
         name=name,
@@ -184,7 +176,6 @@ def sqlmesh_definitions_factory(
     )
     
     # Retourner les Definitions complètes
-    from dagster import Definitions
     
     return Definitions(
         assets=[sqlmesh_assets],
