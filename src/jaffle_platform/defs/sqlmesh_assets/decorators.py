@@ -6,6 +6,8 @@ from dagster import (
     define_asset_job,
     RunRequest,
     Definitions,
+    op,
+    job,
 )
 from .resource import SQLMeshResource
 from .sqlmesh_asset_utils import (
@@ -17,16 +19,17 @@ from .sqlmesh_asset_utils import (
 )
 import datetime
 from .translator import SQLMeshTranslator
+from typing import Optional, Dict, Set, List, Any
 
 def sqlmesh_assets_factory(
     *,
     sqlmesh_resource: SQLMeshResource,
     name: str = "sqlmesh_assets",
     group_name: str = "sqlmesh",
-    op_tags: dict = None,
-    required_resource_keys: set = None,
-    retry_policy: RetryPolicy = None,
-    owners: list = None,
+    op_tags: Optional[Dict[str, Any]] = None,
+    required_resource_keys: Optional[Set[str]] = None,
+    retry_policy: Optional[RetryPolicy] = None,
+    owners: Optional[List[str]] = None,
 ):
     """
     Factory pour créer des assets SQLMesh Dagster.
@@ -40,25 +43,33 @@ def sqlmesh_assets_factory(
         retry_policy: Politique de retry
         owners: Propriétaires des assets
     """
-    extra_keys = get_extra_keys()
-    kinds = get_asset_kinds(sqlmesh_resource)
+    try:
+        extra_keys = get_extra_keys()
+        kinds = get_asset_kinds(sqlmesh_resource)
 
-    # Créer les AssetSpec et AssetCheckSpec
-    specs = create_asset_specs(sqlmesh_resource, extra_keys, kinds, owners, group_name)
-    asset_checks = create_asset_checks(sqlmesh_resource)
+        # Créer les AssetSpec et AssetCheckSpec
+        specs = create_asset_specs(sqlmesh_resource, extra_keys, kinds, owners, group_name)
+        asset_checks = create_asset_checks(sqlmesh_resource)
+    except Exception as e:
+        raise ValueError(f"Failed to create SQLMesh assets: {e}") from e
 
     @multi_asset(
         name=name,
         specs=specs,
         check_specs=asset_checks,
         op_tags=op_tags,
-        required_resource_keys=required_resource_keys,
         retry_policy=retry_policy,
         can_subset=True
     )
     def _sqlmesh_assets(context: AssetExecutionContext, sqlmesh: SQLMeshResource):
-
-        yield from sqlmesh.materialize_all_assets(context)
+        context.log.info("🚀 Starting SQLMesh materialization")
+        
+        try:
+            yield from sqlmesh.materialize_all_assets(context)
+            context.log.info("✅ SQLMesh materialization completed")
+        except Exception as e:
+            context.log.error(f"❌ SQLMesh materialization failed: {e}")
+            raise
 
     return _sqlmesh_assets
 
@@ -79,7 +90,7 @@ def sqlmesh_adaptive_schedule_factory(
     # Obtenir le schedule recommandé basé sur les crons SQLMesh
     recommended_schedule = sqlmesh_resource.get_recommended_schedule()
     
-    # Créer automatiquement le job SQLMesh
+    # Créer automatiquement le job SQLMesh avec multi_asset (pour AssetCheckResult)
     sqlmesh_assets = sqlmesh_assets_factory(sqlmesh_resource=sqlmesh_resource)
     sqlmesh_job = define_asset_job(
         name="sqlmesh_job",
@@ -93,25 +104,12 @@ def sqlmesh_adaptive_schedule_factory(
         description=f"Schedule adaptatif basé sur les crons SQLMesh (granularité: {recommended_schedule})"
     )
     def _sqlmesh_adaptive_schedule(context):
-        """
-        Schedule adaptatif qui s'exécute selon la granularité la plus fine des modèles SQLMesh.
-        SQLMesh gère automatiquement quels modèles doivent être exécutés.
-        """
-        
-        # Utiliser la même logique que le multi_asset pour garder toute la complexité
-        # (AssetCheckResult, métadonnées, etc.)
-        sqlmesh_resource.materialize_all_assets(context)
-        
-        context.log.info(f"✅ Schedule adaptatif exécuté avec granularité: {recommended_schedule}")
-        context.log.debug(f"📊 Modèles analysés: {len(sqlmesh_resource.get_models())} modèles")
-        
-        # Retourner un RunRequest pour déclencher le job Dagster
         return RunRequest(
             run_key=f"sqlmesh_adaptive_{datetime.datetime.now().isoformat()}",
             tags={"schedule": "sqlmesh_adaptive", "granularity": recommended_schedule}
         )
     
-    return _sqlmesh_adaptive_schedule, sqlmesh_job, sqlmesh_assets 
+    return _sqlmesh_adaptive_schedule, sqlmesh_job, sqlmesh_assets
 
 
 def sqlmesh_definitions_factory(
@@ -120,13 +118,13 @@ def sqlmesh_definitions_factory(
     gateway: str = "postgres",
     concurrency_limit: int = 1,
     ignore_cron: bool = False,
-    translator: SQLMeshTranslator = None,
+    translator: Optional[SQLMeshTranslator] = None,
     name: str = "sqlmesh_assets",
     group_name: str = "sqlmesh",
-    op_tags: dict = None,
-    required_resource_keys: set = None,
-    retry_policy: RetryPolicy = None,
-    owners: list = None,
+    op_tags: Optional[Dict[str, Any]] = None,
+    required_resource_keys: Optional[Set[str]] = None,
+    retry_policy: Optional[RetryPolicy] = None,
+    owners: Optional[List[str]] = None,
     schedule_name: str = "sqlmesh_adaptive_schedule",
 ):
     """
@@ -147,7 +145,16 @@ def sqlmesh_definitions_factory(
         schedule_name: Nom du schedule adaptatif
     """
     
-    # Créer la resource SQLMesh (breaking changes jamais autorisés)
+    # Validation des paramètres
+    if concurrency_limit < 1:
+        raise ValueError("concurrency_limit must be >= 1")
+    
+    # Valeurs par défaut robustes
+    op_tags = op_tags or {"sqlmesh": "true"}
+    required_resource_keys = required_resource_keys or {"sqlmesh"}
+    owners = owners or []
+    
+    # Créer la resource SQLMesh
     sqlmesh_resource = SQLMeshResource(
         project_dir=project_dir,
         gateway=gateway,
@@ -156,11 +163,14 @@ def sqlmesh_definitions_factory(
         ignore_cron=ignore_cron
     )
     
-    # Valider les external dependencies avant de créer les assets
-    models = sqlmesh_resource.get_models()
-    validation_errors = validate_external_dependencies(sqlmesh_resource, models)
-    if validation_errors:
-        raise ValueError(f"External dependencies validation failed:\n" + "\n".join(validation_errors))
+    # Valider les external dependencies
+    try:
+        models = sqlmesh_resource.get_models()
+        validation_errors = validate_external_dependencies(sqlmesh_resource, models)
+        if validation_errors:
+            raise ValueError(f"External dependencies validation failed:\n" + "\n".join(validation_errors))
+    except Exception as e:
+        raise ValueError(f"Failed to validate external dependencies: {e}") from e
     
     # Créer les assets SQLMesh
     sqlmesh_assets = sqlmesh_assets_factory(
@@ -180,7 +190,6 @@ def sqlmesh_definitions_factory(
     )
     
     # Retourner les Definitions complètes
-    
     return Definitions(
         assets=[sqlmesh_assets],
         jobs=[sqlmesh_job],
