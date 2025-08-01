@@ -27,6 +27,7 @@ from .sqlmesh_asset_utils import (
     has_breaking_changes_with_message,
     format_partition_metadata,
     get_model_partitions_from_plan,
+    analyze_sqlmesh_crons_using_api,
 )
 from .sqlmesh_event_console import SQLMeshEventCaptureConsole
 from sqlmesh.core.model import Model
@@ -184,6 +185,15 @@ class SQLMeshResource(ConfigurableResource):
         if not hasattr(self, '_models_cache'):
             self._models_cache = list(self.context.models.values())
         return self._models_cache
+
+    def get_recommended_schedule(self):
+        """
+        Analyse les crons SQLMesh et retourne le schedule Dagster recommandé.
+        
+        Returns:
+            str: Expression cron Dagster recommandée
+        """
+        return analyze_sqlmesh_crons_using_api(self.context)
 
     def _serialize_audit_args(self, audit_args):
         """

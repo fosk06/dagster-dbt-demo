@@ -171,25 +171,38 @@ class IntrospectingConsole(Console):
     def create_signatures_and_params(cls, signature: inspect.Signature):
         func_signature: list[str] = []
         call_params: list[str] = []
+        
+        # Séparer les paramètres avec et sans valeurs par défaut
+        required_params = []
+        optional_params = []
+        
         for param_name, param in signature.parameters.items():
             if param_name == "self":
                 func_signature.append("self")
                 continue
 
+            param_type_name = param.annotation
+            if not isinstance(param_type_name, str):
+                param_type_name = param_type_name.__name__
+            
             if param.default is inspect._empty:
-                param_type_name = param.annotation
-                if not isinstance(param_type_name, str):
-                    param_type_name = param_type_name.__name__
-                func_signature.append(f"{param_name}: '{param_type_name}'")
+                # Paramètre requis (sans valeur par défaut)
+                required_params.append((param_name, f"{param_name}: '{param_type_name}'"))
             else:
+                # Paramètre optionnel (avec valeur par défaut)
                 default_value = param.default
-                param_type_name = param.annotation
-                if not isinstance(param_type_name, str):
-                    param_type_name = param_type_name.__name__
                 if isinstance(param.default, str):
                     default_value = f"'{param.default}'"
-                func_signature.append(f"{param_name}: '{param_type_name}' = {default_value}")
+                optional_params.append((param_name, f"{param_name}: '{param_type_name}' = {default_value}"))
+            
             call_params.append(f"{param_name}={param_name}")
+        
+        # Ajouter d'abord les paramètres requis, puis les optionnels
+        for _, sig in required_params:
+            func_signature.append(sig)
+        for _, sig in optional_params:
+            func_signature.append(sig)
+            
         return (func_signature, call_params)
 
     @classmethod

@@ -4,6 +4,7 @@ from dagster import (
     multi_asset,
     AssetExecutionContext,
     RetryPolicy,
+    schedule,
 )
 from .resource import SQLMeshResource
 from .sqlmesh_asset_utils import (
@@ -20,6 +21,7 @@ from .sqlmesh_asset_utils import (
 )
 from typing import Any, Optional
 from sqlmesh.core.model.definition import ExternalModel
+import datetime
 
 def sqlmesh_assets_factory(
     *,
@@ -49,6 +51,7 @@ def sqlmesh_assets_factory(
     # Créer les AssetSpec et AssetCheckSpec
     specs = create_asset_specs(sqlmesh_resource, extra_keys, kinds, owners, group_name)
     asset_checks = create_asset_checks(sqlmesh_resource)
+    schedule = sqlmesh_resource.get_recommended_schedule()
 
     @multi_asset(
         name=name,
@@ -63,4 +66,45 @@ def sqlmesh_assets_factory(
 
         yield from sqlmesh.materialize_all_assets(context)
 
-    return _sqlmesh_assets 
+    return _sqlmesh_assets
+
+
+def sqlmesh_adaptive_schedule_factory(
+    *,
+    sqlmesh_resource: SQLMeshResource,
+    name: str = "sqlmesh_adaptive_schedule",
+):
+    """
+    Factory pour créer un schedule Dagster adaptatif basé sur les crons SQLMesh.
+    
+    Args:
+        sqlmesh_resource: La resource SQLMesh configurée
+        name: Nom du schedule
+    """
+    
+    # Obtenir le schedule recommandé basé sur les crons SQLMesh
+    recommended_schedule = sqlmesh_resource.get_recommended_schedule()
+    
+    @schedule(
+        job=sqlmesh_assets_factory(sqlmesh_resource=sqlmesh_resource),
+        cron_schedule=recommended_schedule,
+        name=name,
+        description=f"Schedule adaptatif basé sur les crons SQLMesh (granularité: {recommended_schedule})"
+    )
+    def _sqlmesh_adaptive_schedule(context):
+        """
+        Schedule adaptatif qui s'exécute selon la granularité la plus fine des modèles SQLMesh.
+        SQLMesh gère automatiquement quels modèles doivent être exécutés.
+        """
+        
+        # SQLMesh gère tout automatiquement !
+        # On lance juste un "sqlmesh run" sur tous les modèles
+        sqlmesh_resource.context.run(
+            ignore_cron=False,  # SQLMesh respecte les crons
+            execution_time=datetime.datetime.now(),
+        )
+        
+        context.log.info(f"✅ Schedule adaptatif exécuté avec granularité: {recommended_schedule}")
+        context.log.debug(f"📊 Modèles analysés: {len(sqlmesh_resource.get_models())} modèles")
+    
+    return _sqlmesh_adaptive_schedule 

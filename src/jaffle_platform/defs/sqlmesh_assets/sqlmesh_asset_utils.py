@@ -1,5 +1,6 @@
 from dagster import AssetSpec, AssetCheckSpec
 from sqlmesh.core.model.definition import ExternalModel
+from sqlmesh.utils.date import now
 from typing import Any
 from datetime import datetime
 from .sqlmesh_asset_check_utils import create_all_asset_checks
@@ -345,144 +346,67 @@ def safe_extract_audit_query(model, audit_obj, audit_args, logger=None):
             return "N/A"
 
 
-def analyze_sqlmesh_crons(models):
+def analyze_sqlmesh_crons_using_api(context):
     """
-    Analyse tous les cron expressions des modèles SQLMesh.
+    Analyse tous les crons des modèles SQLMesh et retourne le schedule Dagster recommandé.
     
     Args:
-        models: Liste des modèles SQLMesh
+        context: SQLMesh Context
     
     Returns:
-        List[dict]: Liste des expressions cron avec leur granularité
-    """
-    cron_expressions = []
-    
-    for model in models:
-        if hasattr(model, 'cron') and model.cron:
-            granularity = parse_cron_granularity(model.cron)
-            cron_expressions.append({
-                'model_name': model.name,
-                'cron': model.cron,
-                'granularity_minutes': granularity
-            })
-    
-    return cron_expressions
-
-
-def parse_cron_granularity(cron_expr):
-    """
-    Détermine la granularité d'une expression cron en minutes.
-    
-    Args:
-        cron_expr: Expression cron SQLMesh (standard ou @daily, @hourly, etc.)
-    
-    Returns:
-        int: Granularité en minutes
-    """
-    # Mapping des granularités SQLMesh vers des intervalles en minutes
-    sqlmesh_granularity_map = {
-        '@yearly': 365 * 24 * 60,    # 525600 minutes
-        '@monthly': 30 * 24 * 60,     # 43200 minutes
-        '@weekly': 7 * 24 * 60,       # 10080 minutes
-        '@daily': 24 * 60,            # 1440 minutes
-        '@hourly': 60,                # 60 minutes
-        '@minutely': 1                # 1 minute
-    }
-    
-    # Si c'est une expression SQLMesh standard
-    if cron_expr in sqlmesh_granularity_map:
-        return sqlmesh_granularity_map[cron_expr]
-    
-    # Sinon, parser l'expression cron standard "minute hour day month weekday"
-    return parse_standard_cron_granularity(cron_expr)
-
-
-def parse_standard_cron_granularity(cron_expr):
-    """
-    Parse une expression cron standard et détermine sa granularité.
-    Basé sur la documentation SQLMesh.
-    
-    Args:
-        cron_expr: Expression cron standard "minute hour day month weekday"
-    
-    Returns:
-        int: Granularité en minutes (minimum 5 minutes)
+        str: Expression cron Dagster recommandée
     """
     try:
-        parts = cron_expr.split()
-        if len(parts) != 5:
-            return 60  # Default: 1 heure
+        models = context.models.values()
         
-        minute, hour, day, month, weekday = parts
+        # Collecter les intervalles des modèles avec cron
+        intervals = []
+        for model in models:
+            if hasattr(model, 'cron') and model.cron:
+                intervals.append(model.interval_unit.seconds)
         
-        # Déterminer la granularité basée sur les patterns
-        if minute != '*' and minute != '0':
-            # Granularité en minutes (minimum 5 minutes selon SQLMesh)
-            if minute.isdigit():
-                return max(5, int(minute))
-            elif '/' in minute:
-                # Pattern comme "*/5" = toutes les 5 minutes
-                interval = int(minute.split('/')[1])
-                return max(5, interval)
-            else:
-                return 5  # Minimum granularité SQLMesh
+        if not intervals:
+            return "0 */6 * * *"  # Default: toutes les 6h
         
-        elif hour != '*' and hour != '0':
-            # Granularité en heures
-            if hour.isdigit():
-                return int(hour) * 60
-            elif '/' in hour:
-                # Pattern comme "0 */6 * * *" = toutes les 6 heures
-                interval = int(hour.split('/')[1])
-                return interval * 60
-            else:
-                return 60
+        # Trouver la granularité la plus fine
+        finest_interval = min(intervals)
         
-        elif day != '*' and day != '1':
-            # Granularité en jours
-            if day.isdigit():
-                return int(day) * 24 * 60
-            elif '/' in day:
-                interval = int(day.split('/')[1])
-                return interval * 24 * 60
-            else:
-                return 24 * 60
+        # Retourner le schedule Dagster recommandé
+        return get_dagster_schedule_from_interval(finest_interval)
         
-        else:
-            # Granularité en jours ou plus
-            return 24 * 60  # 1 jour par défaut
-            
-    except Exception:
-        return 60  # Fallback: 1 heure
+    except Exception as e:
+        # Fallback en cas d'erreur
+        return "0 */6 * * *"  # Default: toutes les 6h
 
 
-def get_optimal_schedule_interval(cron_expressions):
+def get_dagster_schedule_from_interval(interval_seconds):
     """
-    Détermine l'intervalle optimal pour le schedule Dagster.
+    Convertit un intervalle en secondes vers une expression cron Dagster.
     
     Args:
-        cron_expressions: Liste des expressions cron analysées
+        interval_seconds: Intervalle en secondes
     
     Returns:
-        str: Expression cron Dagster optimale
+        str: Expression cron Dagster
     """
-    if not cron_expressions:
-        return "0 */6 * * *"  # Default: toutes les 6h
-    
-    # Trouver la granularité la plus fine
-    min_granularity = min(expr['granularity_minutes'] for expr in cron_expressions)
-    
-    # Convertir en expression cron Dagster
-    if min_granularity <= 5:  # <= 5 minutes
-        return "*/5 * * * *"  # Toutes les 5 minutes
-    elif min_granularity <= 15:  # <= 15 minutes
-        return "*/15 * * * *"  # Toutes les 15 minutes
-    elif min_granularity <= 60:  # <= 1 heure
-        return "0 * * * *"  # Toutes les heures
-    elif min_granularity <= 6 * 60:  # <= 6 heures
-        return "0 */6 * * *"  # Toutes les 6h
+    # Mapping des intervalles vers les expressions cron
+    if interval_seconds <= 300:  # <= 5 minutes
+        return "*/5 * * * *"
+    elif interval_seconds <= 900:  # <= 15 minutes
+        return "*/15 * * * *"
+    elif interval_seconds <= 1800:  # <= 30 minutes
+        return "*/30 * * * *"
+    elif interval_seconds <= 3600:  # <= 1 heure
+        return "0 * * * *"
+    elif interval_seconds <= 21600:  # <= 6 heures
+        return "0 */6 * * *"
+    elif interval_seconds <= 86400:  # <= 1 jour
+        return "0 0 * * *"
     else:
-        return "0 0 * * *"  # Tous les jours
+        return "0 0 * * 0"  # Toutes les semaines
+
+
+
 
 def validate_external_dependencies(sqlmesh_resource, models) -> list:
     """
