@@ -64,6 +64,12 @@ def sqlmesh_assets_factory(
     def _sqlmesh_assets(context: AssetExecutionContext, sqlmesh: SQLMeshResource):
         context.log.info("🚀 Starting SQLMesh materialization")
         
+        # Log des assets qui vont être materialisés (les vrais sélectionnés)
+        selected_asset_keys = context.selected_asset_keys
+        context.log.info(f"📦 Assets to materialize: {len(selected_asset_keys)} assets")
+        for i, asset_key in enumerate(selected_asset_keys, 1):
+            context.log.info(f"   {i}. 🎯 {asset_key}")
+        
         try:
             yield from sqlmesh.materialize_all_assets(context)
             context.log.info("✅ SQLMesh materialization completed")

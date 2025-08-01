@@ -95,8 +95,6 @@ class SQLMeshResource(ConfigurableResource):
         if hasattr(self, '_translator_instance') and self._translator_instance:
             self._console._translator = self._translator_instance
         
-        logger = get_dagster_logger("sqlmesh")
-        logger.info("🔧 SQLMeshResource initialisée avec console")
 
     def __del__(self):
         pass  # Cleanup simplifié
