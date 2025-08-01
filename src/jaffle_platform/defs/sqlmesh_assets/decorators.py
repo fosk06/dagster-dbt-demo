@@ -13,6 +13,7 @@ from .sqlmesh_asset_utils import (
     get_extra_keys,
     create_asset_specs,
     create_asset_checks,
+    validate_external_dependencies,
 )
 import datetime
 from .translator import SQLMeshTranslator
@@ -157,6 +158,12 @@ def sqlmesh_definitions_factory(
         concurrency_limit=concurrency_limit,
         ignore_cron=ignore_cron
     )
+    
+    # Valider les external dependencies avant de créer les assets
+    models = sqlmesh_resource.get_models()
+    validation_errors = validate_external_dependencies(sqlmesh_resource, models)
+    if validation_errors:
+        raise ValueError(f"External dependencies validation failed:\n" + "\n".join(validation_errors))
     
     # Créer les assets SQLMesh
     sqlmesh_assets = sqlmesh_assets_factory(

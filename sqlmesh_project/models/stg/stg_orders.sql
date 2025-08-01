@@ -4,7 +4,7 @@ MODEL (
   cron '@daily',
   grain order_id,
   partitioned_by = ["order_date"],
-  tags ["dagster:group_name:sqlmesh_staging"]
+  tags ["dagster:group_name:staging_sqlmesh"]
 );
 
 

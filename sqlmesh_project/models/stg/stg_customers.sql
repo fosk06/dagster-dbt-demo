@@ -3,7 +3,7 @@ MODEL (
   kind FULL,
   cron '@daily',
   grain customer_id,
-  tags ["dagster:group_name:sqlmesh_staging"]
+  tags ["dagster:group_name:staging_sqlmesh"]
 );
 
 with source as (

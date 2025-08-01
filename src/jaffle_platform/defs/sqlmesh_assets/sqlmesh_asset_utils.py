@@ -5,26 +5,6 @@ from typing import Any
 from datetime import datetime
 from .sqlmesh_asset_check_utils import create_all_asset_checks
 
-def extract_metadata(obj, fields: list[str], prefix: str = "sqlmesh_") -> dict:
-    """
-    Extract and format the specified fields from a SQLMesh object (plan, model, etc.)
-    for use as Dagster asset metadata.
-    """
-    return {f"{prefix}{field}": str(getattr(obj, field, None)) for field in fields}
-
-
-def extract_plan_metadata(plan) -> dict:
-    """
-    Extracts and formats a standard set of metadata fields from a SQLMesh plan object
-    for use as Dagster AssetMaterialization metadata.
-    """
-    fields = [
-        "plan_id", "environment", "start", "end", "has_changes",
-        "models_to_backfill", "requires_backfill", "modified_snapshots", "user_provided_flags"
-    ]
-    return extract_metadata(plan, fields, prefix="sqlmesh_plan_")
-
-
 def get_models_to_materialize(selected_asset_keys, get_models_func, translator):
     """
     Retourne les modèles SQLMesh à matérialiser, en excluant les external models.
@@ -52,19 +32,6 @@ def get_models_to_materialize(selected_asset_keys, get_models_func, translator):
     # Sinon, retourner tous les modèles internes
     return internal_models
 
-
-def get_assetkey_to_snapshot(context, translator) -> dict:
-    """
-    Returns a mapping {AssetKey: snapshot} for all models in the current context.
-    context: SQLMesh Context
-    translator: SQLMeshTranslator instance
-    """
-    assetkey_to_snapshot = {}
-    for snapshot in context.snapshots.values():
-        model = snapshot.model
-        asset_key = translator.get_asset_key(model)
-        assetkey_to_snapshot[asset_key] = snapshot
-    return assetkey_to_snapshot
 
 def get_model_partitions_from_plan(plan, translator, asset_key, snapshot) -> dict:
     """Retourne les informations de partition pour un asset en utilisant le plan."""

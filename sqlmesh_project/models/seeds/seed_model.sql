@@ -1,6 +1,6 @@
 MODEL (
   name sqlmesh_jaffle_platform.seed_model,
-  tags ["dagster:group_name:sqlmesh_staging"],
+  tags ["dagster:group_name:staging_sqlmesh"],
   kind SEED (
     path '../../seeds/seed_data.csv'
   ),
