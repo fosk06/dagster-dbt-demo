@@ -98,12 +98,9 @@ def sqlmesh_adaptive_schedule_factory(
         SQLMesh gère automatiquement quels modèles doivent être exécutés.
         """
         
-        # SQLMesh gère tout automatiquement !
-        # On lance juste un "sqlmesh run" sur tous les modèles
-        sqlmesh_resource.context.run(
-            ignore_cron=False,  # SQLMesh respecte les crons
-            execution_time=datetime.datetime.now(),
-        )
+        # Utiliser la même logique que le multi_asset pour garder toute la complexité
+        # (AssetCheckResult, métadonnées, etc.)
+        sqlmesh_resource.materialize_all_assets(context)
         
         context.log.info(f"✅ Schedule adaptatif exécuté avec granularité: {recommended_schedule}")
         context.log.debug(f"📊 Modèles analysés: {len(sqlmesh_resource.get_models())} modèles")
