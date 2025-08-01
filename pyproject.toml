@@ -18,6 +18,7 @@ dependencies = [
     "sqlmesh[web]>=0.206.1",
     "anyio>=4.9.0",
     "vulture>=2.14",
+    "dg-sqlmesh",
 ]
 
 [project.optional-dependencies]
@@ -51,5 +52,6 @@ registry_modules = [
 
 [tool.uv.sources]
 dagster-sqlmesh = { path = "../dagster-sqlmesh", editable = true }
+dg-sqlmesh = { path = "../dagster-sqlmesh", editable = true }
 
 

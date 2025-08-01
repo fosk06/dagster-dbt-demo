@@ -2,7 +2,7 @@ MODEL (
   name sqlmesh_jaffle_platform.order_items,
   kind FULL,
   cron '@monthly',
-  tags ["dagster:group_name:sqlmesh_datamarts"],
+  tags ["dagster:group_name:datamarts_sqlmesh"],
   grain id,
 );
 

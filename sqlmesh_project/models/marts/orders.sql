@@ -3,7 +3,7 @@ MODEL (
   kind FULL,
   cron '*/5 * * * *',
   grain order_id,
-  tags ["dagster:group_name:sqlmesh_datamarts"],
+  tags ["dagster:group_name:datamarts_sqlmesh"],
   partitioned_by = ["order_date"],
   audits(
     number_of_rows(threshold := 10),
