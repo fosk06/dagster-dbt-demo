@@ -26,11 +26,11 @@ def create_asset_checks_from_model(model, asset_key: AssetKey) -> List[AssetChec
             AssetCheckSpec(
                 name=audit_obj.name,
                 asset=asset_key,  # ← C'est "asset" pas "asset_key" !
-                description=f"SQLMesh audit: {audit_obj.name}",
-                blocking=audit_obj.blocking,  # ← Ajouter le blocking depuis l'audit
+                description=f"Triggered by sqlmesh audit {audit_obj.name} on model {model.name}",
+                blocking=False,  # ← sqlmesh can block materialization if audit fails, but we don't want to block dagster
                 metadata={
                     "audit_query": str(audit_obj.query.sql()),
-                    "audit_blocking": audit_obj.blocking,
+                    "audit_blocking": audit_obj.blocking,  # ← Garder l'info originale dans les métadonnées
                     "audit_dialect": audit_obj.dialect,
                     "audit_args": audit_args
                 }

@@ -338,3 +338,6 @@ class SQLMeshResource(ConfigurableResource):
                     "audit_args": serialized_args
                 }
             )
+        
+        # Nettoyer les événements de la console après avoir émis tous les AssetCheckResult
+        self._console.clear_events()
