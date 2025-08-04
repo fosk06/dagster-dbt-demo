@@ -1,9 +1,13 @@
 MODEL (
   name sqlmesh_jaffle_platform.stg_order_items,
   kind FULL,
-  cron '@daily',
+  cron '*/5 * * * *',
   grain order_item_id,
-  tags ["dagster:group_name:staging_sqlmesh"]
+  tags ["dagster:group_name:staging_sqlmesh"],
+  audits(
+    number_of_rows(threshold := 10),
+    not_null(columns := (order_item_id, order_id, product_id))
+  )
 );
 
 with source as (

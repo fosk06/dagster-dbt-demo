@@ -1,10 +1,14 @@
 MODEL (
   name sqlmesh_jaffle_platform.stg_orders,
   kind FULL,
-  cron '@daily',
+  cron '*/5 * * * *',
   grain order_id,
   partitioned_by = ["order_date"],
-  tags ["dagster:group_name:staging_sqlmesh"]
+  tags ["dagster:group_name:staging_sqlmesh"],
+  audits(
+    number_of_rows(threshold := 10),
+    not_null(columns := (order_id, customer_id, store_id))
+  )
 );
 
 

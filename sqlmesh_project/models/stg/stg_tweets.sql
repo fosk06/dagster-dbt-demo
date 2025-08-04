@@ -2,8 +2,12 @@ MODEL (
   name sqlmesh_jaffle_platform.stg_tweets,
   kind FULL,
   cron '@daily',
-  grain tweet_id,
-  tags ["dagster:group_name:staging_sqlmesh"]
+  grain id,
+  tags ["dagster:group_name:staging_sqlmesh"],
+  audits(
+    number_of_rows(threshold := 10),
+    not_null(columns := (id, user_id))
+  )
 );
 
 with source as (
