@@ -19,4 +19,4 @@ select
     user_id,
     cast(tweeted_at as timestamp) as tweeted_at,
     content
-from source 
+from source
