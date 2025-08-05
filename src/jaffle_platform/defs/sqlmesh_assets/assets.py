@@ -1,4 +1,4 @@
-from dagster import RetryPolicy, AssetKey, Backoff
+from dagster import AssetKey
 from dg_sqlmesh import sqlmesh_definitions_factory
 from dg_sqlmesh.translator import SQLMeshTranslator
 
@@ -14,18 +14,13 @@ class SlingToSqlmeshTranslator(SQLMeshTranslator):
             return AssetKey(['target', 'main', table])
         return AssetKey(['external'] + parts[1:])
 
-# Retry policy commune
-sqlmesh_retry_policy = RetryPolicy(max_retries=1, delay=30.0, backoff=Backoff.EXPONENTIAL)
-
 # Factory tout-en-un : tout configuré en une seule ligne !
 defs = sqlmesh_definitions_factory(
     project_dir="sqlmesh_project",
     gateway="postgres",
     translator=SlingToSqlmeshTranslator(),
     concurrency_limit=1,
-    ignore_cron=True,  # only for testing purposes
     name="sqlmesh_multi_asset",
     group_name="sqlmesh",
-    op_tags={"team": "data", "env": "prod"},
-    retry_policy=sqlmesh_retry_policy,
+    op_tags={"team": "data", "env": "prod"}
 )
