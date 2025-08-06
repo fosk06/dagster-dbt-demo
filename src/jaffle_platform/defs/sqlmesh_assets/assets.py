@@ -22,5 +22,6 @@ defs = sqlmesh_definitions_factory(
     concurrency_limit=1,
     name="sqlmesh_multi_asset",
     group_name="sqlmesh",
-    op_tags={"team": "data", "env": "prod"}
+    op_tags={"team": "data", "env": "prod"},
+    enable_schedule=True
 )

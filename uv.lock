@@ -754,8 +754,10 @@ requires-dist = [
 dev = [
     { name = "dagster-dg-cli", extras = ["local"] },
     { name = "dagster-webserver" },
+    { name = "dg-sqlmesh", virtual = "../dagster-sqlmesh" },
     { name = "duckdb", specifier = ">=1.3.2" },
     { name = "pytest", specifier = ">=8.4.1" },
+    { name = "ruff", specifier = ">=0.3.0" },
     { name = "sqlmesh", extras = ["web"], specifier = ">=0.206.1" },
 ]
 
