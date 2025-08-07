@@ -3,11 +3,11 @@ name = "jaffle_platform"
 requires-python = ">=3.11,<3.13"
 version = "0.1.0"
 dependencies = [
-    "dagster==1.11.2",
-    "dagster-dbt>=0.27.2",
-    "dagster-dlt>=0.27.2",
-    "dagster-postgres>=0.27.2",
-    "dagster-sling>=0.27.2",
+    "dagster>=1.11.4",
+    "dagster-dbt>=0.27.4",
+    "dagster-dlt>=0.27.4",
+    "dagster-postgres>=0.27.4",
+    "dagster-sling>=0.27.4",
     "dbt-postgres>=1.9.0",
     "duckdb>=1.3.1",
     "jafgen>=0.4.14",
@@ -23,7 +23,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dbt = [
-    "dagster>=1.11.2",
+    "dagster>=1.11.4",
     "dlt>=1.13.0",
     "duckdb>=1.3.1",
     "postgres>=4.0",
@@ -51,7 +51,6 @@ registry_modules = [
 [tool.dg.cli]
 
 [tool.uv.sources]
-dagster-sqlmesh = { path = "../dagster-sqlmesh", editable = true }
 dg-sqlmesh = { path = "../dagster-sqlmesh", editable = true }
 
 
