@@ -1,7 +1,7 @@
 MODEL (
   name sqlmesh_jaffle_platform.customers,
   kind FULL,
-  tags ["dagster:group_name:datamarts_sqlmesh"],
+  tags ["dagster:group_name:datamarts_sqlmesh", "datamarts"],
   cron '*/10 * * * *',
   grain customer_id
 );

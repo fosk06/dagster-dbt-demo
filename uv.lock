@@ -728,11 +728,12 @@ wheels = [
 
 [[package]]
 name = "dg-sqlmesh"
-version = "0.1.1"
+version = "1.2.2"
 source = { editable = "../dagster-sqlmesh" }
 dependencies = [
     { name = "anyio" },
     { name = "dagster" },
+    { name = "jinja2" },
     { name = "pandas" },
     { name = "sqlmesh", extra = ["web"] },
     { name = "vulture" },
@@ -744,6 +745,7 @@ requires-dist = [
     { name = "dagster", specifier = "==1.11.4" },
     { name = "dagster-dg-cli", extras = ["local"], marker = "extra == 'dev'" },
     { name = "dagster-webserver", marker = "extra == 'dev'" },
+    { name = "jinja2", specifier = ">=3.0.0" },
     { name = "pandas", specifier = ">=2.2.1" },
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "sqlmesh", extras = ["web"], specifier = ">=0.206.1" },

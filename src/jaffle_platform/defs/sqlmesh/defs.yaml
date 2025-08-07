@@ -1,0 +1,16 @@
+type: dg_sqlmesh.SQLMeshProjectComponent
+
+attributes:
+  sqlmesh_config:
+    project_path: "{{ project_root }}/sqlmesh_project"
+    gateway: "postgres"
+    environment: "prod"
+  concurrency_jobs_limit: 1
+  default_group_name: "sqlmesh"
+  op_tags:
+    team: "data"
+    env: "prod"
+  # schedule_name and enable_schedule are optional with defaults
+  # schedule_name: "sqlmesh_adaptive_schedule"  # default value
+  # enable_schedule: true  # default value
+  external_asset_mapping: "target/main/{node.name}"

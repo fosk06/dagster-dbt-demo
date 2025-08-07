@@ -1,0 +1,44 @@
+type: dg_sqlmesh.SQLMeshProjectComponent
+
+attributes:
+  project: "{{ project_root }}/sqlmesh_project"
+  gateway: "postgres"
+  environment: "prod"
+  concurrency_limit: 1
+  name: "sqlmesh_multi_asset"
+  group_name: "sqlmesh"
+  op_tags:
+    team: "data"
+    env: "prod"
+  retry_policy:
+    max_retries: 1
+    delay: 30.0
+    backoff: "exponential"
+  schedule_name: "sqlmesh_adaptive_schedule"
+  enable_schedule: true
+  external_asset_mapping: "target/main/{node.name}"
+# Note: La configuration external_asset_mapping remplace le translator personnalisé
+# en permettant de définir le mapping via un template Jinja2.
+#
+# Configuration équivalente en Python:
+# from dg_sqlmesh import sqlmesh_definitions_factory
+# from dg_sqlmesh.translator import SQLMeshTranslator
+#
+# class SlingToSqlmeshTranslator(SQLMeshTranslator):
+#     def get_external_asset_key(self, external_fqn: str) -> AssetKey:
+#         parts = external_fqn.replace('"', '').split('.')
+#         if len(parts) >= 3:
+#             catalog, schema, table = parts[0], parts[1], parts[2]
+#             return AssetKey(['target', 'main', table])
+#         return AssetKey(['external'] + parts[1:])
+#
+# defs = sqlmesh_definitions_factory(
+#     project_dir="sqlmesh_project",
+#     gateway="postgres",
+#     translator=SlingToSqlmeshTranslator(),
+#     concurrency_limit=1,
+#     name="sqlmesh_multi_asset",
+#     group_name="sqlmesh",
+#     op_tags={"team": "data", "env": "prod"},
+#     enable_schedule=True
+# )
