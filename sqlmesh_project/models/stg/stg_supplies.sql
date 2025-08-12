@@ -7,6 +7,7 @@ MODEL (
   audits(
     number_of_rows(threshold := 10),
     not_null(columns := (supply_id, product_id, supply_name, supply_cost, perishable)),
+    not_constant_non_blocking(column := perishable),
     not_constant(column := perishable)
   )
 );
