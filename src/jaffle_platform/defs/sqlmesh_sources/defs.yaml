@@ -16,4 +16,8 @@ post_processing:
   assets:
     - target: "*"
       attributes:
-        group_name: "landing_sqlmesh"
+        group_name: "landing"
+        kinds:
+          - postgres
+          - sqlmesh
+          - sling

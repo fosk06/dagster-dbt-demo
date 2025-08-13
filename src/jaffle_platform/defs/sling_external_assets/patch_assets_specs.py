@@ -34,7 +34,7 @@ def build_sling_raw_assets(replication_yaml_path, group_name="landing"):
 defs = Definitions(
     assets=
     [
-        *build_sling_raw_assets("src/jaffle_platform/defs/ingest_files/replication.yaml", group_name="landing_dbt"), 
-        *build_sling_raw_assets("src/jaffle_platform/defs/sqlmesh_sources/sqlmesh_sources_replication.yaml", group_name="landing_sqlmesh")
+        *build_sling_raw_assets("src/jaffle_platform/defs/dbt_sources/replication.yaml", group_name="landing"), 
+        *build_sling_raw_assets("src/jaffle_platform/defs/sqlmesh_sources/sqlmesh_sources_replication.yaml", group_name="landing")
     ]
 )

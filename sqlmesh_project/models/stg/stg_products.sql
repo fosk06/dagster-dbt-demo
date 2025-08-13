@@ -3,7 +3,7 @@ MODEL (
   kind FULL,
   cron '*/5 * * * *',
   grain product_id,
-  tags ["dagster:group_name:staging_sqlmesh", "staging"],
+  tags ["dagster:group_name:staging", "staging"],
   audits(
     number_of_rows(threshold := 5),
     not_null(columns := (product_id, product_price))

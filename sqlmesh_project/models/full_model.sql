@@ -4,7 +4,7 @@ MODEL (
   cron '@daily',
   grain item_id,
   audits (assert_positive_order_ids),
-  tags ["dagster:group_name:staging_sqlmesh"]
+  tags ["dagster:group_name:staging"]
 );
 
 SELECT

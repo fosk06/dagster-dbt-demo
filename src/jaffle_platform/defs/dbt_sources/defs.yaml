@@ -16,4 +16,8 @@ post_processing:
   assets:
     - target: "*"
       attributes:
-        group_name: "landing_dbt"
+        group_name: "landing"
+        kinds:
+          - dbt
+          - postgres
+          - sling
