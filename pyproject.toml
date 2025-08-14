@@ -15,11 +15,10 @@ dependencies = [
     "pandas>=2.2.1",
     "psycopg2-binary>=2.9.10",
     "sqlalchemy>=2.0.41",
-    "sqlmesh[web]>=0.206.1",
     "anyio>=4.9.0",
     "vulture>=2.14",
-    "dg-sqlmesh",
     "fastmcp>=1.0",
+    "dg-sqlmesh>=1.4.0",
 ]
 
 [project.optional-dependencies]
@@ -34,6 +33,7 @@ dbt = [
 dev = [
     "dagster-webserver",
     "dagster-dg-cli[local]",
+    "sqlmesh[web]>=0.209.0",
 ]
 
 [build-system]
@@ -52,6 +52,5 @@ registry_modules = [
 [tool.dg.cli]
 
 [tool.uv.sources]
-dg-sqlmesh = { path = "../dagster-sqlmesh", editable = true }
 
 
