@@ -18,7 +18,7 @@ dependencies = [
     "anyio>=4.9.0",
     "vulture>=2.14",
     "fastmcp>=1.0",
-    "dg-sqlmesh>=1.4.0",
+    "dg-sqlmesh>=1.8.0",
 ]
 
 [project.optional-dependencies]
@@ -32,7 +32,7 @@ dbt = [
 [dependency-groups]
 dev = [
     "dagster-webserver",
-    "dagster-dg-cli[local]",
+    "dagster-dg-cli",
     "sqlmesh[web]>=0.209.0",
 ]
 
@@ -50,7 +50,5 @@ registry_modules = [
 ]
 
 [tool.dg.cli]
-
-[tool.uv.sources]
 
 
