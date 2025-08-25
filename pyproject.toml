@@ -3,11 +3,11 @@ name = "jaffle_platform"
 requires-python = ">=3.11,<3.13"
 version = "0.1.0"
 dependencies = [
-    "dagster>=1.11.5",
-    "dagster-dbt>=0.27.5",
-    "dagster-dlt>=0.27.5",
-    "dagster-postgres>=0.27.5",
-    "dagster-sling>=0.27.5",
+    "dagster>=1.11.7",
+    "dagster-dbt>=0.27.7",
+    "dagster-dlt>=0.27.7",
+    "dagster-postgres>=0.27.7",
+    "dagster-sling>=0.27.7",
     "dbt-postgres>=1.9.0",
     "duckdb>=1.3.1",
     "jafgen>=0.4.14",
