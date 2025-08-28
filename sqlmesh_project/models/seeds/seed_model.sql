@@ -4,6 +4,7 @@ MODEL (
   kind SEED (
     path '../../seeds/seed_data.csv'
   ),
+  cron '*/5 * * * *',
   columns (
     id INTEGER,
     item_id INTEGER,
