@@ -1,4 +1,5 @@
 version = 1
+revision = 1
 requires-python = ">=3.11, <3.13"
 resolution-markers = [
     "python_full_version >= '3.12' and platform_python_implementation != 'PyPy' and sys_platform != 'emscripten'",
@@ -775,19 +776,47 @@ wheels = [
 
 [[package]]
 name = "dg-sqlmesh"
-version = "1.9.2"
-source = { registry = "https://pypi.org/simple" }
+version = "1.10.0"
+source = { editable = "../dagster-sqlmesh" }
 dependencies = [
     { name = "anyio" },
     { name = "dagster" },
     { name = "jinja2" },
     { name = "pandas" },
-    { name = "sqlmesh", extra = ["web"] },
+    { name = "sqlmesh", extra = ["postgres", "web"] },
     { name = "vulture" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4b/7b/3287292477414b9f23ca78d5e8539f7767f6971cd76baab565e526fdb8fd/dg_sqlmesh-1.9.2.tar.gz", hash = "sha256:77e167764de56cbe2d72305534519841b480e050bfbb022839d376c4b4555201", size = 41677 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b6/43/422cac6a1ff7932cffcd64324c592a842aeaaf9778d552b87d727238996c/dg_sqlmesh-1.9.2-py3-none-any.whl", hash = "sha256:872609e875ec2269c6f97fca2174454e6a1a9fbaff063ff09f8cedd8f6f470a8", size = 46682 },
+
+[package.metadata]
+requires-dist = [
+    { name = "anyio", specifier = ">=4.9.0" },
+    { name = "dagster", specifier = ">=1.11.8" },
+    { name = "dagster-dg-cli", marker = "extra == 'dev'", specifier = ">=1.11.8" },
+    { name = "dagster-webserver", marker = "extra == 'dev'", specifier = ">=1.11.8" },
+    { name = "jinja2", specifier = ">=3.0.0" },
+    { name = "pandas", specifier = ">=2.2.1" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.4.1" },
+    { name = "sqlmesh", extras = ["postgres", "web"], specifier = ">=0.214.0" },
+    { name = "vulture", specifier = ">=2.14" },
+]
+provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "coverage", extras = ["toml"], specifier = ">=7.0.0" },
+    { name = "dagster-dg-cli", specifier = ">=1.11.8" },
+    { name = "dagster-webserver", specifier = ">=1.11.8" },
+    { name = "dg-sqlmesh", virtual = "../dagster-sqlmesh" },
+    { name = "duckdb", specifier = ">=1.3.2" },
+    { name = "mkdocs-git-revision-date-localized-plugin", specifier = ">=1.4.7" },
+    { name = "mkdocs-material", specifier = ">=9.6.18" },
+    { name = "mkdocs-minify-plugin", specifier = ">=0.8.0" },
+    { name = "pip-audit", specifier = ">=2.9.0" },
+    { name = "pip-licenses", specifier = ">=5.0.0" },
+    { name = "pytest", specifier = ">=8.4.1" },
+    { name = "ruff", specifier = ">=0.12.10" },
+    { name = "safety", specifier = ">=3.6.0" },
+    { name = "sqlmesh", extras = ["web"], specifier = ">=0.213.1" },
 ]
 
 [[package]]
@@ -1425,7 +1454,7 @@ requires-dist = [
     { name = "dagster-postgres", specifier = ">=0.27.7" },
     { name = "dagster-sling", specifier = ">=0.27.7" },
     { name = "dbt-postgres", specifier = ">=1.9.0" },
-    { name = "dg-sqlmesh", specifier = ">=1.9.2" },
+    { name = "dg-sqlmesh", editable = "../dagster-sqlmesh" },
     { name = "dlt", marker = "extra == 'dbt'", specifier = ">=1.13.0" },
     { name = "duckdb", specifier = ">=1.3.1" },
     { name = "duckdb", marker = "extra == 'dbt'", specifier = ">=1.3.1" },
@@ -1438,12 +1467,13 @@ requires-dist = [
     { name = "sqlalchemy", specifier = ">=2.0.41" },
     { name = "vulture", specifier = ">=2.14" },
 ]
+provides-extras = ["dbt"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "dagster-dg-cli" },
     { name = "dagster-webserver" },
-    { name = "sqlmesh", extras = ["web"], specifier = ">=0.209.0" },
+    { name = "sqlmesh", extras = ["web"], specifier = ">=0.214.0" },
 ]
 
 [[package]]
@@ -2308,6 +2338,18 @@ wheels = [
 ]
 
 [[package]]
+name = "psycopg2"
+version = "2.9.10"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/62/51/2007ea29e605957a17ac6357115d0c1a1b60c8c984951c19419b3474cdfd/psycopg2-2.9.10.tar.gz", hash = "sha256:12ec0b40b0273f95296233e8750441339298e6a572f7039da5b260e3c8b60e11", size = 385672 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/20/a2/c51ca3e667c34e7852157b665e3d49418e68182081060231d514dd823225/psycopg2-2.9.10-cp311-cp311-win32.whl", hash = "sha256:47c4f9875125344f4c2b870e41b6aad585901318068acd01de93f3677a6522c2", size = 1024538 },
+    { url = "https://files.pythonhosted.org/packages/33/39/5a9a229bb5414abeb86e33b8fc8143ab0aecce5a7f698a53e31367d30caa/psycopg2-2.9.10-cp311-cp311-win_amd64.whl", hash = "sha256:0435034157049f6846e95103bd8f5a668788dd913a7c30162ca9503fdf542cb4", size = 1163736 },
+    { url = "https://files.pythonhosted.org/packages/3d/16/4623fad6076448df21c1a870c93a9774ad8a7b4dd1660223b59082dd8fec/psycopg2-2.9.10-cp312-cp312-win32.whl", hash = "sha256:65a63d7ab0e067e2cdb3cf266de39663203d38d6a8ed97f5ca0cb315c73fe067", size = 1025113 },
+    { url = "https://files.pythonhosted.org/packages/66/de/baed128ae0fc07460d9399d82e631ea31a1f171c0c4ae18f9808ac6759e3/psycopg2-2.9.10-cp312-cp312-win_amd64.whl", hash = "sha256:4a579d6243da40a7b3182e0430493dbd55950c493d8c68f4eec0b302f6bbf20e", size = 1163951 },
+]
+
+[[package]]
 name = "psycopg2-binary"
 version = "2.9.10"
 source = { registry = "https://pypi.org/simple" }
@@ -3056,7 +3098,7 @@ wheels = [
 
 [[package]]
 name = "sqlmesh"
-version = "0.212.0"
+version = "0.214.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astor" },
@@ -3081,12 +3123,15 @@ dependencies = [
     { name = "tenacity" },
     { name = "time-machine" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e3/f9/0f36e81b516a2ed605170dc2bbfd7594eda2e0e51766f8fb14945cacac30/sqlmesh-0.212.0.tar.gz", hash = "sha256:ba6850c19b99c3cda0818d668fb4182426c37e425ae0005c503f879b29bdc90a", size = 13139209 }
+sdist = { url = "https://files.pythonhosted.org/packages/62/f7/65406fd52aede6c7d22a39c634d0accb8586d949557b08148ceb7ede5d3f/sqlmesh-0.214.0.tar.gz", hash = "sha256:40b851d8336c07bb8d7544ef158288d95349f56c75cb6a02430e22d317501823", size = 13144464 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3c/05/f7bb215d09ef9ebec77c8aff642851231d77617a8f3e91d6b0159063491e/sqlmesh-0.212.0-py3-none-any.whl", hash = "sha256:f947da9c35be012d3a685981c302c36e874a2cd0a86eeefe2d712afaa121fc8a", size = 5544247 },
+    { url = "https://files.pythonhosted.org/packages/7f/ce/f8cacb74458ea5178a579af54da745196370a7f38fb8bc2167c2d609c8d4/sqlmesh-0.214.0-py3-none-any.whl", hash = "sha256:06b6ea2d31ac0b029ed4c4ae6e4b92a1ee51a554f039fe96f2322f484bd529e5", size = 5548550 },
 ]
 
 [package.optional-dependencies]
+postgres = [
+    { name = "psycopg2" },
+]
 web = [
     { name = "fastapi" },
     { name = "pyarrow" },
